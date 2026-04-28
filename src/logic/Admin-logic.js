@@ -33,6 +33,11 @@ let adminState = "";
 let adminProfile = {};
 let currentTransferOfficer = null;
 
+function closeAdminSidebar() {
+    document.querySelector('.cmd-sidebar')?.classList.remove('active');
+    document.getElementById('adminSidebarBackdrop')?.classList.remove('active');
+}
+
 export function initAdminDashboard() {
     bindAdminUI();
 
@@ -119,8 +124,25 @@ function bindAdminUI() {
 
     if (exportBtn) exportBtn.addEventListener('click', exportRegistryCsv);
     if (mobileToggle) {
+        let backdrop = document.getElementById('adminSidebarBackdrop');
+        if (!backdrop) {
+            backdrop = document.createElement('button');
+            backdrop.type = 'button';
+            backdrop.id = 'adminSidebarBackdrop';
+            backdrop.className = 'admin-sidebar-backdrop';
+            backdrop.setAttribute('aria-label', 'Close admin sidebar');
+            document.body.appendChild(backdrop);
+        }
+
         mobileToggle.addEventListener('click', () => {
-            document.querySelector('.cmd-sidebar')?.classList.toggle('active');
+            const sidebar = document.querySelector('.cmd-sidebar');
+            const isOpen = sidebar?.classList.toggle('active');
+            backdrop.classList.toggle('active', Boolean(isOpen));
+        });
+
+        backdrop.addEventListener('click', closeAdminSidebar);
+        window.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') closeAdminSidebar();
         });
     }
     if (createCourseBtn) createCourseBtn.addEventListener('click', initCourseModal);
@@ -217,6 +239,8 @@ function switchSection(section) {
     document.querySelectorAll('.cmd-nav [data-section]').forEach((btn) => {
         btn.classList.toggle('active', btn.dataset.section === section);
     });
+
+    closeAdminSidebar();
 }
 
 async function refreshAll() {
@@ -714,11 +738,17 @@ window.approvePromotion = async (queueId, officerID, newRank) => {
 };
 
 window.approveReset = async (ticketId, email, name, serviceNo) => {
-    if (!confirm(`Restore access for ${name}? \nA temporary password will be sent to ${email}.`)) return;
+    const targetEmail = String(email || '').trim();
+    if (!targetEmail) {
+        alert("No recovery email is attached to this request.");
+        return;
+    }
+
+    if (!confirm(`Restore access for ${name}? \nA temporary password will be sent to ${targetEmail}.`)) return;
 
     const tempPass = "CAD-" + Math.random().toString(36).slice(-5).toUpperCase();
     try {
-        const apiUrl = `${SCRIPT_URL}?action=sendResetInstructions&email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}&serviceNo=${encodeURIComponent(serviceNo)}&tempPass=${tempPass}`;
+        const apiUrl = `${SCRIPT_URL}?action=sendResetInstructions&email=${encodeURIComponent(targetEmail)}&name=${encodeURIComponent(name)}&serviceNo=${encodeURIComponent(serviceNo)}&tempPass=${tempPass}`;
         const response = await fetch(apiUrl);
         const result = await response.json();
 
@@ -726,16 +756,17 @@ window.approveReset = async (ticketId, email, name, serviceNo) => {
             await updateDoc(doc(db, "password_resets", ticketId), {
                 status: "resolved",
                 tempPasswordUsed: tempPass,
-                resolvedAt: serverTimestamp()
+                resolvedAt: serverTimestamp(),
+                deliveredTo: targetEmail
             });
-            alert(`Success! Officer ${name} has been sent temporary credentials.`);
+            alert(`Success! Officer ${name} has been sent temporary credentials at ${targetEmail}.`);
             await loadResetTickets();
         } else {
             throw new Error(result.message || 'Unknown reset error');
         }
     } catch (error) {
         console.error("Restore Error:", error);
-        alert("Failed to restore access.");
+        alert(error.message || "Failed to restore access.");
     }
 };
 

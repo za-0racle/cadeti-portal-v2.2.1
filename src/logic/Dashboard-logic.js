@@ -13,10 +13,103 @@ const rankMapping = {
 
 let currentOfficer = null;
 
-function getDirectDriveLink(url) {
-    if (!url || url === "N/A" || !url.includes("drive.google.com")) return "/logo.png";
-    const driveId = url.match(/[-\w]{25,}/);
-    return driveId ? `https://drive.google.com/thumbnail?id=${driveId[0]}&sz=w500` : "/logo.png";
+const COURSE_BADGE_OVERRIDES = {
+    "forge of leaders course": "https://drive.google.com/file/d/1E_tn9eWWUg3JZa3VoNdyFtkeM2M14i55/view?usp=sharing",
+    "forge of leaders": "https://drive.google.com/file/d/1vcd6tHat_hxVb31HQs268YvYbxSxa8-K/view?usp=sharing",
+    "leadership & command fundamentals": "https://drive.google.com/file/d/1LW8fcCR9neQFcfxE8xUzkREEdRkdC8kp/view?usp=sharing",
+    "leadership development course": "https://drive.google.com/file/d/170Ba_xhxUTSZt8PGrlMf0iR0QCDUixR5/view?usp=sharing"
+};
+
+const FALLBACK_BADGE_POOL = [
+    "https://drive.google.com/file/d/1E_tn9eWWUg3JZa3VoNdyFtkeM2M14i55/view?usp=sharing",
+    "https://drive.google.com/file/d/1vcd6tHat_hxVb31HQs268YvYbxSxa8-K/view?usp=sharing",
+    "https://drive.google.com/file/d/1LW8fcCR9neQFcfxE8xUzkREEdRkdC8kp/view?usp=sharing",
+    "https://drive.google.com/file/d/170Ba_xhxUTSZt8PGrlMf0iR0QCDUixR5/view?usp=sharing"
+];
+
+function getCourseBadgeSource(course = {}, index = 0) {
+    const normalizedTitle = String(course.title || '').trim().toLowerCase();
+    if (COURSE_BADGE_OVERRIDES[normalizedTitle]) {
+        return COURSE_BADGE_OVERRIDES[normalizedTitle];
+    }
+
+    return course.badgeUrl || FALLBACK_BADGE_POOL[index % FALLBACK_BADGE_POOL.length];
+}
+
+function extractDriveFileId(url) {
+    const cleanUrl = String(url || '').trim();
+    if (!cleanUrl || cleanUrl === "N/A") return "";
+
+    if (cleanUrl.includes("drive.google.com")) {
+        const driveId = cleanUrl.match(/[-\w]{25,}/);
+        return driveId?.[0] || "";
+    }
+
+    return "";
+}
+
+function getAssetImageCandidates(url) {
+    const cleanUrl = String(url || '').trim();
+    if (!cleanUrl || cleanUrl === "N/A") return ["/logo.png"];
+
+    const driveId = extractDriveFileId(cleanUrl);
+    if (driveId) {
+        return [
+            `https://drive.google.com/thumbnail?id=${driveId}&sz=w1000`,
+            `https://drive.google.com/uc?export=view&id=${driveId}`,
+            `https://lh3.googleusercontent.com/d/${driveId}=w1000`,
+            cleanUrl,
+            "/logo.png"
+        ];
+    }
+
+    return [cleanUrl, "/logo.png"];
+}
+
+function createDashboardImageMarkup(url, alt, className = '') {
+    const candidates = getAssetImageCandidates(url);
+    const safeAlt = String(alt || 'Image').replace(/"/g, '&quot;');
+    const imageClass = ['dashboard-image', className].filter(Boolean).join(' ');
+    return `
+        <img
+            class="${imageClass}"
+            src="${candidates[0]}"
+            data-image-candidates='${JSON.stringify(candidates)}'
+            data-image-index="0"
+            alt="${safeAlt}"
+            loading="lazy"
+            referrerpolicy="no-referrer"
+        >
+    `;
+}
+
+function wireDashboardImages(root = document) {
+    root.querySelectorAll('.dashboard-image').forEach((image) => {
+        if (image.dataset.imageBound === 'true') return;
+        image.dataset.imageBound = 'true';
+
+        image.addEventListener('error', () => {
+            let candidates = [];
+            try {
+                candidates = JSON.parse(image.dataset.imageCandidates || '[]');
+            } catch (error) {
+                candidates = [];
+            }
+
+            const currentIndex = Number(image.dataset.imageIndex || 0);
+            const nextIndex = currentIndex + 1;
+
+            if (candidates[nextIndex]) {
+                image.dataset.imageIndex = String(nextIndex);
+                image.src = candidates[nextIndex];
+                return;
+            }
+
+            if (image.src !== window.location.origin + '/logo.png' && image.getAttribute('src') !== '/logo.png') {
+                image.src = '/logo.png';
+            }
+        });
+    });
 }
 
 function setDashboardVisible(isVisible) {
@@ -81,7 +174,9 @@ async function loadLMS() {
         grid.innerHTML = "";
         badgeGallery.innerHTML = "";
 
-        coursesSnap.forEach((courseDoc) => {
+        let earnedBadgeIndex = 0;
+
+        coursesSnap.forEach((courseDoc, index) => {
             const course = courseDoc.data();
             const enroll = myEnrollments[courseDoc.id];
             const officerLvl = rankMapping[currentOfficer.rank] || 0;
@@ -90,6 +185,7 @@ async function loadLMS() {
             const isDeptEligible = !course.eligibleDepts?.length || course.eligibleDepts.includes(currentOfficer.department);
             const isStateEligible = !course.eligibleStates?.length || course.eligibleStates.includes(currentOfficer.state);
             const isEligible = isUnlocked && isDeptEligible && isStateEligible;
+            const badgeSource = getCourseBadgeSource(course, index);
 
             const card = document.createElement('div');
             card.className = `course-card ${isEligible ? '' : 'locked'}`;
@@ -104,19 +200,26 @@ async function loadLMS() {
                         ? `<button class="course-btn btn-completed" type="button" onclick="window.open('${enroll.certificateUrl}', '_blank', 'noopener')">Certificate</button>`
                         : `<button class="course-btn btn-completed" type="button" disabled>Completed</button>`;
 
+                    const accentClass = earnedBadgeIndex % 2 === 0 ? 'badge-accent-green' : 'badge-accent-red';
                     badgeGallery.innerHTML += `
-                        <div class="earned-badge active">
-                            <div class="badge-icon"><img src="${getDirectDriveLink(course.badgeUrl)}" alt="${course.title || 'Badge'}"></div>
-                            <span>${course.title || 'Course Badge'}</span>
-                        </div>
+                        <article class="earned-badge active ${accentClass}">
+                            <div class="badge-icon">
+                                ${createDashboardImageMarkup(badgeSource, course.title || 'Badge')}
+                            </div>
+                            <div class="badge-copy">
+                                <strong>${course.title || 'Course Badge'}</strong>
+                                <span>Completed honor</span>
+                            </div>
+                        </article>
                     `;
+                    earnedBadgeIndex += 1;
                 } else {
                     actionBtn = `<button class="course-btn btn-pending" type="button" disabled>Processing</button>`;
                 }
             }
 
             card.innerHTML = `
-                <div class="badge-preview"><img src="${getDirectDriveLink(course.badgeUrl)}" alt="${course.title || 'Course badge'}"></div>
+                <div class="badge-preview">${createDashboardImageMarkup(badgeSource, course.title || 'Course badge')}</div>
                 <h4>${course.title || 'Untitled Course'}</h4>
                 <p>${course.description || 'No course description available yet.'}</p>
                 <div class="course-meta">
@@ -134,6 +237,9 @@ async function loadLMS() {
         if (!badgeGallery.children.length) {
             badgeGallery.innerHTML = '<p class="empty-msg">No badges earned yet.</p>';
         }
+
+        wireDashboardImages(grid);
+        wireDashboardImages(badgeGallery);
     } catch (error) {
         console.error("LMS Sync Error", error);
         grid.innerHTML = '<div class="panel-placeholder">Unable to load course catalog right now.</div>';
@@ -145,6 +251,11 @@ function updateActiveSidebarTab(tab) {
     document.querySelectorAll('.side-nav .nav-item[data-tab-target]').forEach((button) => {
         button.classList.toggle('active', button.dataset.tabTarget === tab);
     });
+}
+
+function closeSidebar() {
+    document.getElementById('sidebar')?.classList.remove('active');
+    document.getElementById('dashboardSidebarBackdrop')?.classList.remove('active');
 }
 
 function setupTabListeners() {
@@ -166,16 +277,33 @@ function setupTabListeners() {
             loadLMS();
         }
 
-        document.getElementById('sidebar')?.classList.remove('active');
+        closeSidebar();
     };
 }
 
 function setupSidebarToggle() {
     const toggle = document.getElementById('sidebarToggle');
-    if (!toggle) return;
+    const sidebar = document.getElementById('sidebar');
+    if (!toggle || !sidebar) return;
+
+    let backdrop = document.getElementById('dashboardSidebarBackdrop');
+    if (!backdrop) {
+        backdrop = document.createElement('button');
+        backdrop.type = 'button';
+        backdrop.id = 'dashboardSidebarBackdrop';
+        backdrop.className = 'sidebar-backdrop';
+        backdrop.setAttribute('aria-label', 'Close sidebar');
+        document.body.appendChild(backdrop);
+    }
 
     toggle.addEventListener('click', () => {
-        document.getElementById('sidebar')?.classList.toggle('active');
+        const isOpen = sidebar.classList.toggle('active');
+        backdrop.classList.toggle('active', isOpen);
+    });
+
+    backdrop.addEventListener('click', closeSidebar);
+    window.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeSidebar();
     });
 }
 
@@ -302,6 +430,7 @@ export function initDashboard() {
 
             currentOfficer = docSnap.data();
             setupSidebar(currentOfficer, 'profile');
+            wireDashboardImages(document.getElementById('sidebarTarget'));
             populateProfile(currentOfficer);
             setupTabListeners();
             setupSidebarToggle();

@@ -226,7 +226,7 @@ export function initAuth() {
 
                 const record = result.data || {};
                 const officerName = [record["Surname"], record["First Name"]].filter(Boolean).join(' ').trim() || serviceNum;
-                const contactEmail = record["Email"] || record["Email "] || "";
+                const contactEmail = String(record["Email"] || record["Email "] || "").trim();
 
                 if (!contactEmail) {
                     throw new Error("No email address is attached to this service record.");

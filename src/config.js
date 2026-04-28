@@ -17,7 +17,7 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 
 // THE URL YOU PROVIDED
-export const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyt8_A9MTBoX-gULEHZF05jYI66vpnnnWJEhw4rBs-GzWQ623CEWZKC9kOSiZsZHlWGWg/exec";
+export const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyqbmKO7dgcZfuZKm0XwdzcB6XfOeYXx_B3Y2rP2Sh8lwRxFZP8ZDkVwTTP0nxSGE_BIA/exec";
 
 export const getShadowEmail = (serviceNum) => {
     const cleanNum = serviceNum.replace(/\//g, "").toLowerCase().trim();
