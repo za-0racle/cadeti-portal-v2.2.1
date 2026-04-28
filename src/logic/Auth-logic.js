@@ -1,6 +1,22 @@
 import { auth, db, getShadowEmail, SCRIPT_URL } from '../config.js';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { browserSessionPersistence, createUserWithEmailAndPassword, onAuthStateChanged, setPersistence, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { addDoc, collection, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const authSessionReady = setPersistence(auth, browserSessionPersistence)
+    .catch((error) => console.error('Session persistence setup failed:', error));
+
+let unloadLogoutBound = false;
+
+function bindUnloadLogout() {
+    if (unloadLogoutBound) return;
+    unloadLogoutBound = true;
+
+    window.addEventListener('pagehide', () => {
+        if (auth.currentUser) {
+            signOut(auth).catch((error) => console.error('Auto logout failed:', error));
+        }
+    });
+}
 
 function setLoginPending(isPending) {
     const btn = document.getElementById('loginBtn');
@@ -64,6 +80,7 @@ export function initAuth() {
         }
 
         try {
+            await authSessionReady;
             const email = userInp.includes('@') ? userInp : getShadowEmail(userInp);
             await signInWithEmailAndPassword(auth, email, passInp);
         } catch (error) {
@@ -194,56 +211,60 @@ export function initAuth() {
 }
 
 export function startAuthObserver() {
-    onAuthStateChanged(auth, async (user) => {
-        const path = window.location.pathname.toLowerCase();
-        const loader = document.getElementById('authGuardLoader');
-        const onLoginPage = path.includes('login');
-        const onSignupPage = path.includes('signup');
-        const onAdminPage = path.includes('admin');
-        const onDashboardPage = path.includes('dashboard');
+    authSessionReady.finally(() => {
+        bindUnloadLogout();
 
-        try {
-            if (!user) {
-                if (onAdminPage || onDashboardPage) {
-                    window.location.replace('/login.html');
+        onAuthStateChanged(auth, async (user) => {
+            const path = window.location.pathname.toLowerCase();
+            const loader = document.getElementById('authGuardLoader');
+            const onLoginPage = path.includes('login');
+            const onSignupPage = path.includes('signup');
+            const onAdminPage = path.includes('admin');
+            const onDashboardPage = path.includes('dashboard');
+
+            try {
+                if (!user) {
+                    if (onAdminPage || onDashboardPage) {
+                        window.location.replace('/login.html');
+                        return;
+                    }
+
+                    if (onLoginPage) setLoginPending(false);
+                    if (onSignupPage && !window.isProcessingSignup) setSignupPending(false);
+                    if (loader) loader.style.display = 'none';
                     return;
                 }
 
-                if (onLoginPage) setLoginPending(false);
-                if (onSignupPage && !window.isProcessingSignup) setSignupPending(false);
-                if (loader) loader.style.display = 'none';
-                return;
+                const adminDoc = await getDoc(doc(db, "admins", user.uid));
+                const isAdmin = adminDoc.exists();
+
+                if (onLoginPage) {
+                    window.location.replace(isAdmin ? '/admin.html' : '/dashboard.html');
+                    return;
+                }
+
+                if (onSignupPage) {
+                    window.location.replace(isAdmin ? '/admin.html' : '/dashboard.html');
+                    return;
+                }
+
+                if (onAdminPage && !isAdmin) {
+                    window.location.replace('/dashboard.html');
+                    return;
+                }
+
+                if (onDashboardPage && isAdmin) {
+                    window.location.replace('/admin.html');
+                    return;
+                }
+            } catch (error) {
+                console.error('Auth observer error:', error);
             }
 
-            const adminDoc = await getDoc(doc(db, "admins", user.uid));
-            const isAdmin = adminDoc.exists();
-
-            if (onLoginPage) {
-                window.location.replace(isAdmin ? '/admin.html' : '/dashboard.html');
-                return;
-            }
-
-            if (onSignupPage) {
-                window.location.replace(isAdmin ? '/admin.html' : '/dashboard.html');
-                return;
-            }
-
-            if (onAdminPage && !isAdmin) {
-                window.location.replace('/dashboard.html');
-                return;
-            }
-
-            if (onDashboardPage && isAdmin) {
-                window.location.replace('/admin.html');
-                return;
-            }
-        } catch (error) {
-            console.error('Auth observer error:', error);
-        }
-
-        if (onLoginPage) setLoginPending(false);
-        if (onSignupPage && !window.isProcessingSignup) setSignupPending(false);
-        if (loader) loader.style.display = 'none';
+            if (onLoginPage) setLoginPending(false);
+            if (onSignupPage && !window.isProcessingSignup) setSignupPending(false);
+            if (loader) loader.style.display = 'none';
+        });
     });
 }
 
@@ -298,6 +319,7 @@ export function initSignup() {
         }
 
         try {
+            await authSessionReady;
             const response = await fetch(`${SCRIPT_URL}?action=searchByServiceNumber&serviceNumber=${encodeURIComponent(serviceNum)}`);
             const result = await response.json();
 
