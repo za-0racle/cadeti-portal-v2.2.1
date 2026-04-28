@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Access | CADETI Portal</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="/src/styles/auth.css">
+</head>
+<body class="auth-page">
+    <!-- Auth Loader (Fixed Overlay) -->
+    <div id="authGuardLoader" class="login-overlay" style="display: none;">
+        <div class="spinner"></div>
+        <p>Authenticating Command...</p>
+    </div>
+
+    <div class="overlay">
+        <section class="form-section">
+            <div class="form-container animate-up">
+                <img src="/logo.png" class="form-logo">
+                <h2>SECURE PORTAL</h2>
+                <p class="subtitle">Official Personnel Authorization</p>
+
+                <form id="loginForm">
+                    <div class="input-group">
+                        <input type="text" id="loginUser" placeholder="Service Number or Admin Email" required>
+                        <small class="input-hint">Officers: Use CAD/XX/XXX/... | Admins: Use email</small>
+                    </div>
+                    
+                    <div class="input-group">
+                        <input type="password" id="loginPass" placeholder="Access Password" required>
+                    </div>
+
+                    <button type="submit" id="loginBtn">
+                        <span class="btn-text">Log In</span>
+                        <div class="spinner"></div>
+                    </button>
+
+                    <div id="errorMessage" class="status-box" style="display: none; background: #fee2e2; color: #b91c1c;"></div>
+
+                    <div class="auth-footer">
+                        <p>Need access? <a href="/signup.html">Activate Account</a></p>
+                        <p><a href="javascript:void(0)" id="forgotPasswordLink">Forgot Password?</a></p>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div>
+
+    <div id="forgotPasswordModal" class="modal-overlay-auth" style="display: none;">
+        <div class="auth-modal-card">
+            <div class="auth-modal-header">
+                <h3>Password Recovery</h3>
+                <button type="button" id="closeForgotModal" aria-label="Close">&times;</button>
+            </div>
+
+            <div class="auth-modal-body">
+                <div class="input-group">
+                    <input type="text" id="forgotServiceNum" placeholder="Enter Service Number (CAD/...)" required>
+                    <small class="input-hint">We will verify your service record before sending an approval request.</small>
+                </div>
+
+                <button type="button" id="verifyForgotBtn">
+                    <span class="btn-text">Verify Record</span>
+                    <div class="spinner"></div>
+                </button>
+
+                <div id="forgotDetails" class="status-box" style="display: none; background: #f8fafc; color: #1f2937; text-align: left;">
+                    <p><strong>Name:</strong> <span id="forgotOfficerName">---</span></p>
+                    <p><strong>Email:</strong> <span id="forgotOfficerEmail">---</span></p>
+                    <p style="margin-top: 10px;">Confirm that the temporary password should be sent to this email after admin approval.</p>
+                </div>
+
+                <div id="forgotMessageBox" class="status-box" style="display: none;"></div>
+
+                <button type="button" id="submitForgotBtn" style="display: none;">
+                    <span class="btn-text">Send Recovery Request</span>
+                    <div class="spinner"></div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activate Account | CADETI Portal</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="/src/styles/auth.css">
+</head>
+<body class="auth-page">
+    <div id="authGuardLoader" class="login-overlay" style="display: none;">
+        <div class="spinner"></div>
+        <p>Verifying Service Record...</p>
+    </div>
+
+    <div class="overlay">
+        <section class="form-section">
+            <div class="form-container animate-up">
+                <img src="/logo.png" class="form-logo">
+                <h2>PORTAL ACTIVATION</h2>
+                <p class="subtitle">Initialize your secure officer access</p>
+
+                <form id="signupForm">
+                    <div class="input-group">
+                        <input type="text" id="signupServiceNum" placeholder="Official Service Number (CAD/...)" required>
+                        <small class="input-hint">Must match your assigned Service Number exactly.</small>
+                    </div>
+                    
+                    <div class="input-group">
+                        <input type="password" id="signupPassword" placeholder="Create Access Password" required>
+                    </div>
+
+                    <div class="input-group">
+                        <input type="password" id="confirmPassword" placeholder="Confirm Access Password" required>
+                    </div>
+
+                    <button type="submit" id="signupBtn">
+                        <span class="btn-text">Activate Portal Access</span>
+                        <div class="spinner"></div>
+                    </button>
+
+                    <div id="messageBox" class="status-box" style="display: none;"></div>
+
+                    <div class="auth-footer">
+                        <p>Already activated? <a href="/login.html">Login here</a></p>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Member Revalidation — CADETI</title>
+  <link rel="icon" type="image/png" href="/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <link rel="stylesheet" href="/src/styles/registration.css">
+</head>
+
+<body class="registration-page">
+<div class="overlay">
+  <section class="form-section">
+    <div class="form-container animate-up">
+      <img src="/logo.png" class="form-logo">
+      <h2>C.A.D.E.T.I DATABASE DRIVE 2026</h2>
+      <p class="subtitle">Official Officer Revalidation Portal</p>
+
+      <form id="cadetiForm">
+        <input type="hidden" id="regType" value="Revalidation">
+
+        <!-- Names -->
+        <div class="grid">
+          <input type="text" id="firstName" placeholder="First Name" required>
+          <input type="text" id="surname" placeholder="Surname" required>
+        </div>
+        <input type="text" id="otherName" placeholder="Other Name">
+
+        <input type="text" id="address" placeholder="Residential Address" required>
+        <input type="text" id="occupation" placeholder="Occupation / Profession" required>
+
+        <!-- Phone & Gender -->
+        <div class="grid">
+          <input type="tel" id="phone" placeholder="Phone Number" required>
+          <div class="gender-wrapper">
+            <span class="gender-label">Gender:</span>
+            <div class="gender-options">
+                <label><input type="radio" name="gender" value="Male" required> M</label>
+                <label><input type="radio" name="gender" value="Female"> F</label>
+            </div>
+          </div>
+        </div>
+
+        <input type="text" id="serviceNumber" placeholder="Service Number" readonly title="Generated automatically" class="final-number">
+
+        <!-- Rank & Department -->
+        <select id="rank" required>
+          <option value="">Select Rank</option>
+        </select>
+
+        <select id="department" required>
+          <option value="">Select Department</option>
+          <option value="Training & Doctrine">Training & Doctrine</option>
+          <option value="Cadet Police">Cadet Police</option>
+          <option value="Lion Striker Squad">Lion Striker Squad</option>
+          <option value="Cadet Special Squad">Cadet Special Squad</option>
+          <option value="Media & Publications">Media & Publications</option>
+          <option value="Band">Band</option>
+          <option value="Medical">Medical</option>
+          <option value="Regular">Regular</option>
+        </select>
+
+        <input type="text" id="postHeld" placeholder="Current Post Held">
+
+        <!-- Command Locations -->
+        <div class="grid">
+          <select id="state" required><option value="">Select State Command</option></select>
+          <select id="area" required><option value="">Select Area Command</option></select>
+        </div>
+
+        <!-- Intake & Serial -->
+        <div class="grid">
+          <select id="intakeYear" required><option value="">Intake Year</option></select>
+          <input type="number" id="serialNumber" placeholder="Serial Number" required>
+        </div>
+
+        <input type="email" id="email" placeholder="Email Address" required>
+        <input type="text" id="areaOC" placeholder="Area OC Full Name">
+
+        <!-- Passport Upload -->
+        <div class="passport-upload-container">
+            <div class="passport-preview" id="passportPreview">
+                <i class="fa-solid fa-user-tie"></i>
+                <span>Preview</span>
+            </div>
+            <div class="passport-info">
+                <label for="passportInput" class="upload-btn">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Upload Passport
+                </label>
+                <input type="file" id="passportInput" accept="image/*" style="display: none;">
+                <p class="upload-hint">Must be in UNIFORM on a WHITE BACKGROUND.</p>
+            </div>
+        </div>
+
+        <!-- Next of Kin -->
+        <div class="nok-section">
+          <h3>Next of Kin Details</h3>
+          <input type="text" id="nokName" placeholder="Full Name" required>
+          <div class="grid">
+            <input type="text" id="nokRelation" placeholder="Relationship" required>
+            <input type="tel" id="nokPhone" placeholder="Phone Number" required>
+          </div>
+          <input type="text" id="nokAddress" placeholder="Next of Kin Residential Address" required style="margin-top: 10px;">
+        </div>
+
+        <!-- T&C Trigger -->
+        <div id="tcTriggerSection" class="agree-row" style="background: #fff5f5; border: 1px solid #ffcccc; margin-top: 25px; padding: 15px; border-radius: 8px;">
+          <div style="text-align: left;">
+            <p style="font-size: 13px; font-weight: 600; color: #c00; margin-bottom: 5px;">Final Step: Legal Declaration</p>
+            <a href="javascript:void(0)" id="openTCBtn" style="color: #0b3d91; font-weight: 600; text-decoration: underline; font-size: 13px;">Read Terms & Conditions to Submit</a>
+          </div>
+        </div>
+
+        <!-- Hidden T&C Area -->
+        <div id="tcArea" style="display: none; margin-top: 20px; border: 2px solid green; padding: 15px; border-radius: 8px;">
+          <div class="tc-scroll-box">
+            <p><strong>1. Accuracy:</strong> I certify that all information provided is true and accurate.</p><br>
+            <p><strong>2. Falsification:</strong> intentional falsification leads to legal prosecution.</p>
+          </div>
+          <div class="timer-bar-wrap"><div class="timer-bar" id="tbar"></div></div>
+          <p class="timer-label" id="tlabel">Verifying in <span id="tcountdown">15</span>s</p>
+          <div class="agree-row-checkbox">
+            <input type="checkbox" id="agreeCheck" disabled>
+            <label for="agreeCheck" class="agree-text">I confirm that I have read the terms.</label>
+          </div>
+        </div>
+
+        <button type="submit" id="submitBtn" disabled>
+          <span class="btn-text">Submit Revalidation</span>
+          <span class="spinner"></span>
+        </button>
+
+        <div id="successMessage" class="success-box" style="display: none;">
+          <h3>Submission Successful!</h3>
+          <p>Check your email for confirmation.</p>
+        </div>
+      </form>
+    </div>
+  </section>
+</div>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

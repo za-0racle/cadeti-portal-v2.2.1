@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personnel Portal | CADETI</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body class="dashboard-page">
+
+    <!-- Auth Loader -->
+    <div id="authGuardLoader" class="login-overlay">
+        <div class="spinner"></div>
+        <p>Securing Personnel Link...</p>
+    </div>
+
+    <div id="dashboardWrapper" class="dashboard-layout" style="display: none;">
+        
+        <!-- Sidebar Target -->
+        <div id="sidebarTarget"></div>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <button class="menu-toggle-btn" id="sidebarToggle"><i class="fa-solid fa-bars"></i></button>
+                <div class="welcome-text">
+                    <h1 id="pageTitle">Personnel Dashboard</h1>
+                    <p id="serviceNumDisplay">Service Number: Fetching...</p>
+                </div>
+            </header>
+
+            <div class="content-wrap">
+                <!-- TAB A: PERSONNEL PROFILE -->
+                <div id="section-profile" class="tab-content">
+                    <section class="profile-data-grid">
+                        <div class="data-card animate-up">
+                            <label><i class="fa-solid fa-building-shield"></i> Current Command</label>
+                            <h3 id="dataState">---</h3>
+                            <p id="dataArea">---</p>
+                        </div>
+                        <div class="data-card animate-up" style="animation-delay: 0.1s;">
+                            <label><i class="fa-solid fa-briefcase"></i> Assignment</label>
+                            <h3 id="dataDept">---</h3>
+                            <p id="dataPost">---</p>
+                        </div>
+                        <div class="data-card animate-up" style="animation-delay: 0.2s;">
+                            <label><i class="fa-solid fa-envelope"></i> Contact Info</label>
+                            <h3 id="dataPhone">---</h3>
+                            <p id="dataEmail">---</p>
+                        </div>
+                    </section>
+
+                    <section class="full-details-section animate-up" style="animation-delay: 0.3s;">
+                        <h4 class="section-title">Personnel Records</h4>
+                        <div class="details-list" id="detailsList">
+                            <!-- JS will inject key-value pairs here -->
+                        </div>
+                    </section>
+                </div>
+
+                <!-- TAB B: LEARNING CENTER (LMS) -->
+                <div id="section-lms" class="tab-content" style="display: none;">
+                    <section class="lms-header-card animate-up">
+                        <div class="header-stats">
+                            <div class="stat"><small>Current Qualification</small><h4 id="lmsRank">---</h4></div>
+                            <div class="stat"><small>Training Status</small><h4 id="lmsStatus">Active Duty</h4></div>
+                        </div>
+                        <div class="achievements-container">
+                            <label><i class="fa-solid fa-medal"></i> Earned Badges & Honors</label>
+                            <div id="badgeGallery" class="badge-row">
+                                <p class="empty-msg">Syncing records...</p>
+                            </div>
+                        </div>
+                    </section>
+                    <div class="catalog-title-row">
+                        <h3>Course Catalog</h3>
+                        <p>Specialized training gated by Rank and Department.</p>
+                    </div>
+                    <div id="courseGrid" class="course-grid">
+                        <!-- JS Dynamic Course Cards -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- SECURITY MODAL -->
+    <div id="securityModal" class="modal-overlay">
+        <div class="modal-card animate-up">
+            <button class="close-modal" id="closeSecurityBtn">&times;</button>
+            <h3>Account Security</h3>
+            <p class="subtitle">Re-authentication required for password changes.</p>
+            <div class="input-group-modal">
+                <input type="password" id="currentPassword" placeholder="Current Password">
+                <input type="password" id="newPassword" placeholder="New Password">
+            </div>
+            <button id="updatePasswordBtn" class="cmd-btn">Update Credentials</button>
+            <div id="securityMsg" class="status-box"></div>
+        </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>

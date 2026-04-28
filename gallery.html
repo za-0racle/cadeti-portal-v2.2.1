@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Gallery | CADETI Official Portal</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="/src/styles/gallery.css">
+</head>
+<body class="gallery-page">
+
+    <!-- Hero Section -->
+    <section class="about-hero" style="height: 45vh;">
+        <div class="hero-content animate-up">
+            <p class="hero-org">National Archives</p>
+            <h1>OFFICIAL PHOTO GALLERY</h1>
+            <p class="hero-tag">"Documenting our journey in youth leadership and national service."</p>
+        </div>
+    </section>
+
+    <!-- Filter Bar -->
+    <div class="filter-section">
+        <div class="container">
+            <div id="filterBar" class="filter-container">
+                <!-- JS will inject buttons: All, Parades, Training, Camps, Community Service -->
+                <div class="filter-skeleton"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gallery Grid -->
+    <section class="section-padding white-bg">
+        <div class="container">
+            <div id="galleryGrid" class="gallery-grid">
+                <!-- JS will inject images here -->
+                <p class="text-center">Initializing Secure Media Link...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Lightbox Modal -->
+    <div id="lightbox" class="lightbox">
+        <span class="close-lightbox">&times;</span>
+        <img class="lightbox-content" id="lightbox-img">
+        <div id="caption"></div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>

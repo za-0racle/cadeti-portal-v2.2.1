@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CADETI Command HQ | Admin Portal</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="/src/styles/admin.css">
+</head>
+<body class="admin-page">
+
+    <div id="authGuardLoader" class="login-overlay">
+        <div class="spinner"></div>
+        <p>Establishing Secure Command Link...</p>
+    </div>
+
+    <div id="adminWrapper" class="dashboard-container" style="display: none;">
+        <button class="mobile-toggle" id="mobileToggle" type="button">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+
+        <div id="adminSidebarTarget"></div>
+
+        <main class="data-deck">
+            <div class="deck-content">
+                <section id="section-registry" class="tab-content active">
+                    <header class="deck-header">
+                        <div class="header-title">
+                            <h1 id="adminPanelTitle">Personnel Registry</h1>
+                            <div class="status-indicator"><span class="pulse-dot"></span> Online</div>
+                        </div>
+                        <div class="header-actions">
+                            <button id="transferBtn" class="cmd-btn-small" style="display: none; background: #f39c12;">
+                                <i class="fa-solid fa-truck-ramp-box"></i> TRANSFER OFFICER
+                            </button>
+                            <button id="exportBtn" class="cmd-btn-small">EXPORT CSV</button>
+                        </div>
+                    </header>
+
+                    <section class="filter-strip">
+                        <div class="filter-controls">
+                            <div class="filter-box">
+                                <select id="filterState">
+                                    <option value="">States</option>
+                                </select>
+                            </div>
+                            <div class="filter-box">
+                                <select id="filterDept">
+                                    <option value="">Departments</option>
+                                </select>
+                            </div>
+                            <div class="filter-box">
+                                <select id="filterRank">
+                                    <option value="">Ranks</option>
+                                </select>
+                            </div>
+                            <div class="search-bar">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="adminSearch" placeholder="Search ID or Name...">
+                            </div>
+                        </div>
+                    </section>
+
+                    <div class="table-container">
+                        <table class="registry-table">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Service ID</th>
+                                    <th>Full Name</th>
+                                    <th>Rank</th>
+                                    <th>Dept.</th>
+                                    <th>Command</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminTableBody">
+                                <tr><td colspan="7" class="text-center">Awaiting command sync...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="section-resets" class="tab-content" style="display: none;">
+                    <header class="deck-header">
+                        <div class="header-title">
+                            <h1>Security Hub</h1>
+                            <div class="status-indicator"><span class="pulse-dot"></span> Monitoring</div>
+                        </div>
+                    </header>
+                    <div class="table-container">
+                        <table class="registry-table">
+                            <thead><tr><th>Officer</th><th>ID</th><th>Time</th><th>Status</th><th>Actions</th></tr></thead>
+                            <tbody id="resetTicketsBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="section-promotions" class="tab-content" style="display: none;">
+                    <header class="deck-header">
+                        <div class="header-title">
+                            <h1 id="promoTitle">Promotion Board</h1>
+                            <div class="status-indicator"><span class="pulse-dot"></span> Review Queue</div>
+                        </div>
+                    </header>
+                    <div class="table-container">
+                        <table class="registry-table">
+                            <thead><tr><th>Officer</th><th>Current</th><th>Proposed</th><th>State</th><th>Actions</th></tr></thead>
+                            <tbody id="promotionBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="section-enrollments" class="tab-content" style="display: none;">
+                    <header class="deck-header">
+                        <div class="header-title">
+                            <h1>Training Applications</h1>
+                            <div class="status-indicator"><span class="pulse-dot"></span> In Queue</div>
+                        </div>
+                    </header>
+                    <div class="table-container">
+                        <table class="registry-table">
+                            <thead><tr><th>Officer</th><th>Course</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
+                            <tbody id="enrollmentBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="section-graduation" class="tab-content" style="display: none;">
+                    <header class="deck-header">
+                        <div class="header-title">
+                            <h1>Graduation Queue</h1>
+                            <div class="status-indicator"><span class="pulse-dot"></span> Processing</div>
+                        </div>
+                    </header>
+                    <div class="table-container">
+                        <table class="registry-table">
+                            <thead><tr><th>Recruit ID</th><th>Name</th><th>CAD No.</th><th>State</th><th>Actions</th></tr></thead>
+                            <tbody id="graduationBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="section-courses" class="tab-content" style="display: none;">
+                    <header class="deck-header">
+                        <div class="header-title">
+                            <h1>LMS Publisher</h1>
+                            <div class="status-indicator"><span class="pulse-dot"></span> Drafting</div>
+                        </div>
+                        <button id="createCourseBtn" class="cmd-btn-small">CREATE COURSE</button>
+                    </header>
+                    <div id="courseListGrid" class="kpi-grid course-grid"></div>
+                </section>
+
+                <section id="section-admins" class="tab-content" style="display: none;">
+                    <header class="deck-header">
+                        <div class="header-title">
+                            <h1>Admin Access Manager</h1>
+                            <div class="status-indicator"><span class="pulse-dot"></span> Restricted</div>
+                        </div>
+                        <button id="newAdminBtn" class="cmd-btn-small">NEW ADMIN</button>
+                    </header>
+                    <div class="table-container">
+                        <table class="registry-table">
+                            <thead><tr><th>Name</th><th>State</th><th>Role</th><th>Status</th><th>Action</th></tr></thead>
+                            <tbody id="adminUserBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <div id="editModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Update Personnel File</h3>
+                <button type="button" data-close-modal="editModal">&times;</button>
+            </div>
+            <form id="editOfficerForm" class="modal-form">
+                <input type="hidden" id="editUid">
+                <div class="input-group-modal">
+                    <label for="editPost">Current Post Held</label>
+                    <input type="text" id="editPost" required>
+                </div>
+                <div class="input-group-modal">
+                    <label for="editDept">Department</label>
+                    <select id="editDept"></select>
+                </div>
+                <div class="promotion-box">
+                    <label for="editRank">Target Rank</label>
+                    <select id="editRank"></select>
+                </div>
+                <button type="submit" class="cmd-btn">Commit Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="courseModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Publish New Course</h3>
+                <button type="button" data-close-modal="courseModal">&times;</button>
+            </div>
+            <form id="courseForm" class="modal-form">
+                <input type="text" id="cTitle" placeholder="Course Title" required>
+                <textarea id="cDesc" placeholder="Brief Course Description" rows="3"></textarea>
+                <div class="input-group-modal">
+                    <label for="cRank">Min Rank Level</label>
+                    <select id="cRank" required></select>
+                </div>
+                <div class="grid-2">
+                    <div class="multi-select-area">
+                        <label>Eligible Depts</label>
+                        <div id="cDeptsList" class="checkbox-grid"></div>
+                    </div>
+                    <div class="multi-select-area">
+                        <label>Eligible States</label>
+                        <div id="cStatesList" class="checkbox-grid"></div>
+                    </div>
+                </div>
+                <div class="input-group-modal">
+                    <label for="cBadge">Badge URL (Drive Link)</label>
+                    <input type="text" id="cBadge" placeholder="Paste link here">
+                </div>
+                <button type="submit" class="cmd-btn">Deploy Course</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="adminModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Authorize New Admin</h3>
+                <button type="button" data-close-modal="adminModal">&times;</button>
+            </div>
+            <form id="adminForm" class="modal-form">
+                <input type="text" id="newAdminName" placeholder="Full Name" required>
+                <input type="email" id="newAdminEmail" placeholder="Login Email" required>
+                <div class="input-group-modal">
+                    <label for="newAdminState">Assigned Command</label>
+                    <select id="newAdminState" required></select>
+                </div>
+                <div class="input-group-modal">
+                    <label for="newAdminRole">System Role</label>
+                    <select id="newAdminRole" required>
+                        <option value="state">State Admin</option>
+                        <option value="super">Super Admin</option>
+                    </select>
+                </div>
+                <button type="submit" class="cmd-btn">Create Admin Account</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="transferModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Command Personnel Transfer</h3>
+                <button type="button" class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="search-box-container" style="margin-bottom: 20px;">
+                    <input type="text" id="transferSearchID" placeholder="Enter Service Number (CAD/...)">
+                    <button type="button" id="verifyTransferBtn">Find Officer</button>
+                </div>
+
+                <div id="transferDetails" style="display: none;">
+                    <div class="profile-preview-card" style="margin-bottom: 15px;">
+                        <p><strong>Officer:</strong> <span id="tName">---</span></p>
+                        <p><strong>Current Command:</strong> <span id="tCurrentLocation">---</span></p>
+                    </div>
+
+                    <div class="input-group-modal">
+                        <label for="targetState">Target State Command</label>
+                        <select id="targetState">
+                            <option value="">Select State</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group-modal">
+                        <label for="targetArea">Target Area Command</label>
+                        <select id="targetArea">
+                            <option value="">Select Area</option>
+                        </select>
+                    </div>
+
+                    <button type="button" id="executeTransferBtn" class="cmd-btn" style="margin-top: 20px;">
+                        EXECUTE TRANSFER
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Officer Validation — CADETI</title>
+  <link rel="icon" type="image/png" href="/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <link rel="stylesheet" href="/src/styles/registration.css">
+</head>
+
+<body class="registration-page">
+<div class="overlay">
+
+  <section class="form-section">
+    <div class="form-container animate-up">
+      <img src="/logo.png" class="form-logo">
+      <h2>OFFICER VALIDATION</h2>
+      <p class="subtitle">Assign Service Number & Verify Identity</p>
+
+      <!-- STEP 1: LOOKUP RECRUIT ID -->
+      <div id="searchStep">
+          <div class="search-box-container">
+              <input type="text" id="searchRecruitID" placeholder="Enter Appointed Number (REC/...)">
+              <button type="button" id="lookupBtn">Verify ID</button>
+          </div>
+          <p class="search-hint">Enter the REC number generated during your first registration.</p>
+      </div>
+
+      <!-- STEP 2: DATA DISPLAY & SERVICE NUMBER INPUT (Hidden initially) -->
+      <form id="validationForm" style="display: none;">
+        <input type="hidden" id="regType" value="Validation">
+        
+        <!-- BIO DATA PREVIEW (READ ONLY) -->
+        <div class="profile-preview-card">
+            <p class="preview-header">Recruit Bio-Data Found:</p>
+            <div class="grid">
+                <input type="text" id="dispName" readonly title="Full Name">
+                <input type="text" id="dispPhone" readonly title="Phone">
+            </div>
+            <div class="grid">
+                <input type="text" id="dispEmail" readonly title="Email">
+                <input type="text" id="dispGender" readonly title="Gender">
+            </div>
+            <input type="text" id="dispAddress" readonly title="Address">
+            <div class="grid">
+                <input type="text" id="dispOccupation" readonly title="Occupation">
+                <input type="text" id="dispDept" readonly title="Proposed Department">
+            </div>
+             <p class="preview-header" style="margin-top:10px;">Next of Kin Details:</p>
+             <div class="grid">
+                <input type="text" id="dispNokName" readonly title="NOK Name">
+                <input type="text" id="dispNokPhone" readonly title="NOK Phone">
+             </div>
+        </div>
+
+        <!-- PASSPORT UPLOAD -->
+        <div class="passport-upload-container">
+            <div class="passport-preview" id="passportPreview">
+                <i class="fa-solid fa-user-tie"></i>
+                <span>Preview</span>
+            </div>
+            <div class="passport-info">
+                <label for="passportInput" class="upload-btn">
+                    <i class="fa-solid fa-camera"></i> Upload Passport
+                </label>
+                <input type="file" id="passportInput" accept="image/*" style="display: none;">
+                <p class="upload-hint">Official UNIFORM on WHITE BACKGROUND.</p>
+            </div>
+        </div>
+
+        <!-- OFFICIAL SERVICE DATA GENERATOR -->
+        <div class="service-num-builder">
+            <p class="section-title">INPUT OFFICIAL SERVICE DATA</p>
+            <input type="text" id="serviceNumber" placeholder="Generated Service Number" readonly class="final-number">
+            
+            <div class="grid">
+                <select id="state" required><option value="">Select State</option></select>
+                <select id="area" required><option value="">Select Area</option></select>
+            </div>
+            <div class="grid">
+                <select id="intakeYear" required>
+                    <option value="">Intake Year</option>
+                    <option value="024">024</option>
+                    <option value="025">025</option>
+                    <option value="026">026</option>
+                </select>
+                <input type="number" id="serialNumber" placeholder="Serial (001-300)" required max="300">
+            </div>
+            
+            <input type="text" id="areaOC" placeholder="Area OC Full Name" required>
+            <input type="text" id="rank" placeholder="Assigned Rank (e.g. Private)" required>
+            <input type="text" id="postHeld" placeholder="Current Post Held">
+        </div>
+
+        <!-- T&C AND SUBMIT -->
+        <div id="tcArea" style="display:block;">
+            <div class="timer-bar-wrap"><div class="timer-bar" id="tbar"></div></div>
+            <p class="timer-label" id="tlabel">Verifying official data — <span id="tcountdown">15</span>s</p>
+            <div class="agree-row-checkbox">
+                <input type="checkbox" id="agreeCheck" disabled>
+                <label for="agreeCheck" class="agree-text">I confirm that all data above is correct and officially assigned.</label>
+            </div>
+        </div>
+
+        <button type="submit" id="submitBtn" disabled>
+            <span class="btn-text">Finalize & Print Form</span>
+            <span class="spinner"></span>
+        </button>
+
+        <div id="successMessage" class="success-box">
+            <h3>Validation Successful!</h3>
+            <p>Your record is updated. Check your email for your final printout.</p>
+        </div>
+      </form>
+    </div>
+  </section>
+
+</div>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

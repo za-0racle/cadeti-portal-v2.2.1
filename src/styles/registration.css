@@ -1,0 +1,310 @@
+/* =========================================
+   1. PAGE LAYOUT & OVERLAY
+   ========================================= */
+.registration-page {
+    background: url('/public/parade/parade\ \(8\).jpg') no-repeat center center fixed;
+    background-size: cover;
+    min-height: 100vh;
+}
+
+.overlay {
+    background: rgba(0, 43, 5, 0.7); /* Deep Green Tint preserved from your code */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column; 
+    color: white;
+}
+
+/* =========================================
+   2. FORM CONTAINER
+   ========================================= */
+.form-section {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    padding: 60px 20px;
+}
+
+.form-container {
+    background: white;
+    color: #1a1a1a;
+    padding: 40px;
+    border-radius: 15px;
+    width: 100%;
+    max-width: 550px;
+    text-align: center;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
+    position: relative;
+    margin-top: 20px;
+}
+
+.form-logo { 
+    width: 80px; 
+    margin-bottom: 15px; 
+}
+
+.form-container h2 { 
+    color: var(--primary-green); 
+    font-size: 1.4rem; 
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+}
+
+.subtitle { 
+    font-size: 13px; 
+    font-weight: 600; 
+    margin-bottom: 30px; 
+    color: #666;
+}
+
+/* =========================================
+   3. INPUTS, SELECTS & GRIDS
+   ========================================= */
+.grid { 
+    display: flex; 
+    gap: 12px; 
+}
+
+input, select {
+    width: 100%;
+    padding: 12px 15px;
+    margin: 8px 0;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    transition: 0.3s;
+}
+
+input:focus, select:focus {
+    border-color: var(--primary-green);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 77, 0, 0.1);
+}
+
+/* Read-Only State for Validation Preview */
+input[readonly] {
+    background-color: #f5f5f5;
+    color: #555;
+    cursor: not-allowed;
+    border-style: dashed;
+}
+
+/* Gender Wrapper Layout */
+.gender-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 0 15px;
+    background: #fff;
+    height: 48px;
+    margin: 8px 0;
+}
+
+.gender-label { font-size: 12px; color: #666; margin-right: 12px; }
+.gender-options { display: flex; gap: 15px; }
+.gender-options label { display: flex; align-items: center; gap: 5px; font-size: 13px; cursor: pointer; color: #333;}
+
+/* =========================================
+   4. SPECIAL MODULES (PASSPORT & SEARCH)
+   ========================================= */
+
+/* Search Box (Validation Page Specific) */
+.search-box-container {
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.search-box-container input {
+    flex: 1;
+    border: 2px solid #0b3d91; /* Specific validation blue */
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+#lookupBtn {
+    width: auto;
+    background: #0b3d91;
+    padding: 0 25px;
+    font-size: 13px;
+    font-weight: 700;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* Passport Upload & Preview */
+.passport-upload-container {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: #fcfcfc;
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px dashed var(--primary-green);
+    margin: 20px 0;
+    text-align: left;
+}
+
+.passport-preview {
+    width: 80px;
+    height: 100px;
+    border: 2px solid #eee;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.passport-preview img { width: 100%; height: 100%; object-fit: cover; }
+.passport-preview i { font-size: 32px; color: #ddd; }
+.passport-preview span { font-size: 9px; color: #aaa; text-transform: uppercase; margin-top: 5px; }
+
+.upload-btn {
+    background: #0b3d91;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 700;
+    display: inline-block;
+}
+
+.upload-hint { font-size: 10px; color: #444; margin-top: 8px; line-height: 1.4; }
+
+/* Generated Service Number Result */
+.final-number {
+    background: #002b05 !important;
+    color: #ffcc00 !important; /* Gold text for premium look */
+    text-align: center;
+    font-size: 18px !important;
+    font-weight: 800 !important;
+    letter-spacing: 2px;
+    margin: 15px 0 !important;
+    border: none !important;
+}
+
+/* =========================================
+   5. SECTIONS (NOK & PROFILE)
+   ========================================= */
+.profile-preview-card {
+    background: #f4f7ff;
+    border: 1px solid #d1d9ff;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    text-align: left;
+}
+
+.preview-header { font-size: 11px; font-weight: 800; color: #0b3d91; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 1px; }
+
+.nok-section {
+    margin-top: 30px; 
+    padding: 25px; 
+    border-top: 4px solid var(--primary-green);
+    background: #f9fff9; 
+    border-radius: 0 0 15px 15px; 
+    text-align: left;
+}
+
+.nok-section h3 { font-size: 14px; color: var(--primary-green); margin-bottom: 15px; }
+
+/* =========================================
+   6. TIMER, T&C AND SUBMISSION
+   ========================================= */
+.timer-bar-wrap { background: #eee; height: 6px; border-radius: 10px; overflow: hidden; margin-top: 15px; }
+.timer-bar { height: 100%; background: #4caf50; width: 0%; transition: width 1s linear; }
+.timer-label { font-size: 11px; color: #666; font-weight: 700; margin-top: 8px; }
+
+.tc-scroll-box {
+    max-height: 140px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 12px;
+    text-align: left;
+    color: #444;
+    line-height: 1.6;
+}
+
+.agree-row-checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: 15px;
+    text-align: left;
+}
+
+.agree-row-checkbox input { width: auto; margin-top: 4px; cursor: pointer; }
+.agree-text { font-size: 12px; color: #333; font-weight: 500; }
+
+/* Submit Button & States */
+button[type="submit"] {
+    background: var(--primary-green);
+    color: white;
+    padding: 16px;
+    border: none;
+    width: 100%;
+    margin-top: 25px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 800;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+button:disabled { background: #ccc !important; cursor: not-allowed; transform: none !important; }
+button:hover:enabled { background: var(--accent-red); transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+
+/* Rolling Spinner Logic */
+.spinner {
+    display: none;
+    width: 22px;
+    height: 22px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top: 3px solid white;
+    border-radius: 50%;
+    animation: roll 0.8s linear infinite;
+    margin-left: 10px;
+}
+
+@keyframes roll { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+button.loading .btn-text { opacity: 0.7; }
+button.loading .spinner { display: block; }
+
+/* Success Box */
+.success-box {
+    display: none;
+    background: #eaffea;
+    border: 2px solid var(--primary-green);
+    padding: 20px;
+    margin-top: 25px;
+    border-radius: 12px;
+    color: #004d00;
+}
+
+.success-box h3 { color: var(--primary-green); margin-bottom: 5px; }
+
+/* =========================================
+   7. RESPONSIVE ADJUSTMENTS
+   ========================================= */
+@media screen and (max-width: 600px) {
+    .form-container { padding: 25px; }
+    .grid { flex-direction: column; gap: 0; }
+    .passport-upload-container { flex-direction: column; text-align: center; }
+    .passport-preview { margin: 0 auto; }
+}
