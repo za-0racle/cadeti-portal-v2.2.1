@@ -5,17 +5,99 @@ import { addDoc, collection, doc, getDoc, setDoc, serverTimestamp } from "https:
 const authSessionReady = setPersistence(auth, browserSessionPersistence)
     .catch((error) => console.error('Session persistence setup failed:', error));
 
-let unloadLogoutBound = false;
+const SESSION_START_KEY = 'cadeti_session_started_at';
+const SESSION_LAST_ACTIVITY_KEY = 'cadeti_session_last_activity_at';
+const IDLE_TIMEOUT_MS = 15 * 60 * 1000;
+const MAX_SESSION_MS = 2 * 60 * 60 * 1000;
 
-function bindUnloadLogout() {
-    if (unloadLogoutBound) return;
-    unloadLogoutBound = true;
+let sessionMonitorId = null;
+let sessionTrackingBound = false;
 
-    window.addEventListener('pagehide', () => {
-        if (auth.currentUser) {
-            signOut(auth).catch((error) => console.error('Auto logout failed:', error));
+function now() {
+    return Date.now();
+}
+
+function markSessionStarted() {
+    const timestamp = String(now());
+    sessionStorage.setItem(SESSION_START_KEY, timestamp);
+    sessionStorage.setItem(SESSION_LAST_ACTIVITY_KEY, timestamp);
+}
+
+function touchSessionActivity() {
+    if (!auth.currentUser) return;
+    sessionStorage.setItem(SESSION_LAST_ACTIVITY_KEY, String(now()));
+}
+
+function clearSessionTracking() {
+    sessionStorage.removeItem(SESSION_START_KEY);
+    sessionStorage.removeItem(SESSION_LAST_ACTIVITY_KEY);
+}
+
+function getSessionTimes() {
+    const startedAt = Number(sessionStorage.getItem(SESSION_START_KEY) || 0);
+    const lastActivityAt = Number(sessionStorage.getItem(SESSION_LAST_ACTIVITY_KEY) || 0);
+    return { startedAt, lastActivityAt };
+}
+
+async function expireSession(reason) {
+    clearSessionTracking();
+    try {
+        await signOut(auth);
+    } catch (error) {
+        console.error('Session expiry logout failed:', error);
+    }
+
+    const onProtectedPage = window.location.pathname.toLowerCase().includes('admin') || window.location.pathname.toLowerCase().includes('dashboard');
+    if (onProtectedPage) {
+        alert(reason === 'idle'
+            ? 'Your session expired due to inactivity. Please sign in again.'
+            : 'Your secure session expired. Please sign in again.');
+        window.location.replace('/login.html');
+    }
+}
+
+function stopSessionMonitor() {
+    if (sessionMonitorId) {
+        window.clearInterval(sessionMonitorId);
+        sessionMonitorId = null;
+    }
+}
+
+function startSessionMonitor() {
+    stopSessionMonitor();
+
+    if (!sessionTrackingBound) {
+        ['click', 'keydown', 'mousemove', 'scroll', 'touchstart'].forEach((eventName) => {
+            window.addEventListener(eventName, touchSessionActivity, { passive: true });
+        });
+        sessionTrackingBound = true;
+    }
+
+    sessionMonitorId = window.setInterval(() => {
+        if (!auth.currentUser) {
+            stopSessionMonitor();
+            return;
         }
-    });
+
+        const { startedAt, lastActivityAt } = getSessionTimes();
+        const currentTime = now();
+
+        if (!startedAt || !lastActivityAt) {
+            markSessionStarted();
+            return;
+        }
+
+        if (currentTime - lastActivityAt > IDLE_TIMEOUT_MS) {
+            stopSessionMonitor();
+            expireSession('idle');
+            return;
+        }
+
+        if (currentTime - startedAt > MAX_SESSION_MS) {
+            stopSessionMonitor();
+            expireSession('max');
+        }
+    }, 30 * 1000);
 }
 
 function setLoginPending(isPending) {
@@ -83,6 +165,7 @@ export function initAuth() {
             await authSessionReady;
             const email = userInp.includes('@') ? userInp : getShadowEmail(userInp);
             await signInWithEmailAndPassword(auth, email, passInp);
+            markSessionStarted();
         } catch (error) {
             setLoginPending(false);
             if (errorBox) {
@@ -212,8 +295,6 @@ export function initAuth() {
 
 export function startAuthObserver() {
     authSessionReady.finally(() => {
-        bindUnloadLogout();
-
         onAuthStateChanged(auth, async (user) => {
             const path = window.location.pathname.toLowerCase();
             const loader = document.getElementById('authGuardLoader');
@@ -231,9 +312,19 @@ export function startAuthObserver() {
 
                     if (onLoginPage) setLoginPending(false);
                     if (onSignupPage && !window.isProcessingSignup) setSignupPending(false);
+                    clearSessionTracking();
+                    stopSessionMonitor();
                     if (loader) loader.style.display = 'none';
                     return;
                 }
+
+                const hasSessionStart = sessionStorage.getItem(SESSION_START_KEY);
+                if (!hasSessionStart) {
+                    markSessionStarted();
+                } else {
+                    touchSessionActivity();
+                }
+                startSessionMonitor();
 
                 const adminDoc = await getDoc(doc(db, "admins", user.uid));
                 const isAdmin = adminDoc.exists();
@@ -270,6 +361,8 @@ export function startAuthObserver() {
 
 window.handleLogout = () => {
     if (confirm("Logout from CADETI secure session?")) {
+        clearSessionTracking();
+        stopSessionMonitor();
         signOut(auth)
             .then(() => window.location.replace('/login.html'))
             .catch((error) => {
@@ -367,6 +460,8 @@ export function initSignup() {
                 msgBox.style.color = "green";
                 msgBox.innerText = "Portal Activated! Preparing Dashboard...";
             }
+
+            markSessionStarted();
 
             setTimeout(() => {
                 window.isProcessingSignup = false;
