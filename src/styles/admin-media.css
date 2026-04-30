@@ -1,0 +1,55 @@
+/* src/styles/admin-media.css */
+
+.media-toggle-box {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 12px;
+    border: 1.5px solid #eee;
+    margin: 10px 0;
+}
+
+.toggle-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.toggle-buttons button {
+    flex: 1;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    background: white;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.toggle-buttons button.active {
+    background: var(--primary-green);
+    color: white;
+    border-color: var(--primary-green);
+}
+
+.comment-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.comment-card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.comment-card p { font-size: 13px; color: #444; margin: 10px 0; }
+.comment-card .author { font-weight: 800; font-size: 11px; color: var(--primary-green); }
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}

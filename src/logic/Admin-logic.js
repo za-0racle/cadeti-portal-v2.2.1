@@ -13,6 +13,8 @@ import {
     updateDoc,
     where
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { setupAdminPasswordModal } from './AdminPassword.js';
+import { getAdminAssignedState, getAdminDisplayName, getAdminRole } from '../utils/adminProfile.js';
 
 const RANK_LIST = [
     "Private", "Lance Corporal", "Corporal", "Sergeant", "Staff Sergeant",
@@ -24,7 +26,7 @@ const RANK_LIST = [
 
 const DEPT_LIST = [
     "Training & Doctrine", "Cadet Police", "Lion Striker Squad", "Cadet Special Squad",
-    "Media & Publications", "Band", "Medical", "Regular"
+    "Media & Publications", "Admin and Finance", "Band", "Medical", "Regular"
 ];
 
 let allOfficers = [];
@@ -40,6 +42,7 @@ function closeAdminSidebar() {
 
 export function initAdminDashboard() {
     bindAdminUI();
+    setupAdminPasswordModal();
 
     onAuthStateChanged(auth, async (user) => {
         const wrapper = document.getElementById('adminWrapper');
@@ -61,8 +64,8 @@ export function initAdminDashboard() {
                 return;
             }
 
-            adminRole = String(adminProfile.role || adminProfile.Role || 'national').toLowerCase();
-            adminState = adminProfile.assignedState || adminProfile.state || adminProfile.State || "";
+            adminRole = getAdminRole(adminProfile);
+            adminState = getAdminAssignedState(adminProfile);
 
             hydrateAdminShell(adminProfile, user);
             if (wrapper) wrapper.style.display = 'flex';
@@ -181,7 +184,7 @@ function hydrateAdminShell(adminData, user) {
     }
 
     if (sidebarTarget) {
-        const displayName = adminData.name || adminData.fullName || user.email || 'Administrator';
+        const displayName = getAdminDisplayName(adminData, user);
         const roleLabel = adminRole === 'state'
             ? `${adminState || 'State'} Command`
             : 'National HQ';
@@ -219,6 +222,7 @@ function hydrateAdminShell(adminData, user) {
                     </div>
                 </nav>
                 <div class="sidebar-bottom">
+                    <button class="action-btn-outline" type="button" onclick="window.openAdminSecurity()"><i class="fa-solid fa-lock"></i> Password</button>
                     <button class="action-btn-outline" type="button" id="syncDataBtn">Sync Data</button>
                     <button class="exit-btn" type="button" onclick="handleLogout()">Exit</button>
                 </div>
@@ -501,9 +505,9 @@ async function loadAdminManager() {
             const isSuspended = a.status === 'suspended';
             rows.push(`
                 <tr>
-                    <td><b>${a.name || a.fullName || 'Unnamed Admin'}</b></td>
-                    <td>${a.assignedState || a.state || 'National'}</td>
-                    <td>${a.role || 'state'}</td>
+                    <td><b>${getAdminDisplayName(a)}</b></td>
+                    <td>${getAdminAssignedState(a) || 'National'}</td>
+                    <td>${getAdminRole(a) || 'state'}</td>
                     <td><span class="rank-badge ${isSuspended ? 'badge-red' : 'badge-green'}">${a.status || 'active'}</span></td>
                     <td><button class="action-icon" type="button" onclick="window.updateAdminStatus('${docSnap.id}', '${isSuspended ? 'active' : 'suspended'}')"><i class="fa-solid fa-user-slash"></i></button></td>
                 </tr>

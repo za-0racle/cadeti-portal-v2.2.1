@@ -2,7 +2,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
+import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 const firebaseConfig = {
     apiKey: "AIzaSyDMIuQlbHvXq518Y7ipnS5iVMs1m2uYME4",
     authDomain: "cadeti-officer-portal.firebaseapp.com",
@@ -15,9 +15,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+export const storage = getStorage(app);
 
 // THE URL YOU PROVIDED
-export const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyqbmKO7dgcZfuZKm0XwdzcB6XfOeYXx_B3Y2rP2Sh8lwRxFZP8ZDkVwTTP0nxSGE_BIA/exec";
+export const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxbg_Dh_jrLwjCKftcGO7caO75RJrJN51GT8jUkfhP87AVvm6VheJAkt7L_oe2PeYCOpA/exec";
 
 export const getShadowEmail = (serviceNum) => {
     const cleanNum = serviceNum.replace(/\//g, "").toLowerCase().trim();

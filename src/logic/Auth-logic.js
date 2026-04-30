@@ -135,6 +135,24 @@ function setForgotPending(buttonId, isPending) {
     btn.disabled = isPending;
 }
 
+function getAdminHome(adminData = {}) {
+    const role = String(adminData.role || adminData.Role || '').trim().toLowerCase();
+    return role.includes('media') ? '/admin-media.html' : '/admin.html';
+}
+
+function isMediaAdmin(adminData = {}) {
+    const role = String(adminData.role || adminData.Role || '').trim().toLowerCase();
+    return role.includes('media');
+}
+
+function getSheetValue(row = {}, keys = []) {
+    for (const key of keys) {
+        const value = row[key];
+        if (String(value || '').trim()) return value;
+    }
+    return "";
+}
+
 export function initAuth() {
     const loginForm = document.getElementById('loginForm');
     const forgotPasswordLink = document.getElementById('forgotPasswordLink');
@@ -328,14 +346,18 @@ export function startAuthObserver() {
 
                 const adminDoc = await getDoc(doc(db, "admins", user.uid));
                 const isAdmin = adminDoc.exists();
+                const adminData = isAdmin ? adminDoc.data() : {};
+                const adminHome = isAdmin ? getAdminHome(adminData) : '/dashboard.html';
+                const onMediaAdminPage = path.includes('admin-media');
+                const onMainAdminPage = path.includes('admin.html') && !onMediaAdminPage;
 
                 if (onLoginPage) {
-                    window.location.replace(isAdmin ? '/admin.html' : '/dashboard.html');
+                    window.location.replace(adminHome);
                     return;
                 }
 
                 if (onSignupPage) {
-                    window.location.replace(isAdmin ? '/admin.html' : '/dashboard.html');
+                    window.location.replace(adminHome);
                     return;
                 }
 
@@ -344,8 +366,18 @@ export function startAuthObserver() {
                     return;
                 }
 
-                if (onDashboardPage && isAdmin) {
+                if (isAdmin && isMediaAdmin(adminData) && onMainAdminPage) {
+                    window.location.replace('/admin-media.html');
+                    return;
+                }
+
+                if (isAdmin && !isMediaAdmin(adminData) && onMediaAdminPage) {
                     window.location.replace('/admin.html');
+                    return;
+                }
+
+                if (onDashboardPage && isAdmin) {
+                    window.location.replace(adminHome);
                     return;
                 }
             } catch (error) {
@@ -446,8 +478,8 @@ export function initSignup() {
                 nokRelation: s["NOK Relationship"] || s["NOK relationship"] || "",
                 nokPhone: s["NOK Phone Number"] || "",
                 nokAddress: s["NOK Residential Address"] || "",
-                passportUrl: s["Passport URL"] || "N/A",
-                pdfUrl: s["PDF URL"] || "",
+                passportUrl: getSheetValue(s, ["Passport URL", "Passport Url", "PassportURL", "Passport Photo", "Photo URL", "Photo"]) || "N/A",
+                pdfUrl: getSheetValue(s, ["PDF URL", "PDF Url", "PDFURL"]) || "",
                 uniqueID: s["Unique ID"] || "",
                 userId: uid,
                 activatedAt: new Date().toISOString()

@@ -32,7 +32,34 @@ function initSlideshow() {
 
 document.addEventListener('DOMContentLoaded', () => {
     initSlideshow();
+    
+    // --- HOME PAGE (News Widget) ---
+    if (path === '/' || path.includes('index.html')) {
+        import('./logic/Public-media-logic.js').then(m => {
+            // Check for pinned news to show the widget
+            m.setupNewsWidget();
+        });
+    }
 
+    // --- NEWS FEED ---
+    if (path.includes('news.html')) {
+        import('./logic/Public-media-logic.js').then(m => m.loadMediaFeed('news'));
+    }
+
+    // --- ARTICLES & PUBLICATIONS FEED ---
+    if (path.includes('publications.html')) {
+        import('./logic/Public-media-logic.js').then(m => m.loadMediaFeed('article'));
+    }
+
+    // --- EVENTS FEED ---
+    if (path.includes('events.html')) {
+        import('./logic/Public-media-logic.js').then(m => m.loadMediaFeed('event'));
+    }
+
+    // --- DYNAMIC READER (Single Post View) ---
+    if (path.includes('view.html')) {
+        import('./logic/Public-media-logic.js').then(m => m.loadSinglePost());
+    }
     // 3. PAGE SPECIFIC LOGIC
     if (path.includes('login')) {
         initAuth();
@@ -42,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
         initSignup();
     }
 
-    if (path.includes('admin')) {
+    if (path.includes('admin.html')) {
         import('./logic/Admin-logic.js').then(m => m.initAdminDashboard());
     }
 
@@ -56,6 +83,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (path.includes('gallery')) {
         import('./logic/gallery-logic.js').then(m => m.initGallery());
+    }
+
+    if (path.includes('contact')) {
+        import('./logic/Contact-logic.js').then(m => m.initContactPage());
+    }
+
+    if (path.includes('admin-media')) {
+        import('./logic/Media-logic.js').then(m => m.initMediaDashboard());
     }
 
     // REGISTRATION ENGINE

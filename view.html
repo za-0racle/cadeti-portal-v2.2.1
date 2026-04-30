@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Publication | CADETI</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="/src/styles/media-public.css">
+</head>
+<body class="reader-page">
+    <article class="article-container container animate-fade">
+        <header class="article-header">
+            <div id="postCategory" class="post-label">Category</div>
+            <h1 id="postTitle">---</h1>
+            <div class="post-meta">Published on <span id="postDate">---</span> | By <span id="postAuthor">---</span></div>
+        </header>
+
+        <div id="postCover" class="article-cover"></div>
+
+        <div id="postContent" class="article-body">
+            <!-- Rich Text Body Injected Here -->
+        </div>
+
+        <!-- SHARE STRIP (As requested: Only Share Buttons) -->
+        <div class="share-strip">
+            <span>DISTRIBUTE UPDATE:</span>
+            <div class="share-buttons">
+                <button onclick="window.sharePost('whatsapp')"><i class="fab fa-whatsapp"></i></button>
+                <button onclick="window.sharePost('facebook')"><i class="fab fa-facebook-f"></i></button>
+                <button onclick="window.sharePost('x')"><i class="fab fa-x-twitter"></i></button>
+            </div>
+        </div>
+
+        <!-- COMMENT SECTION (Anonymous) -->
+        <section class="comment-section">
+            <h3>Discussion</h3>
+            <div id="commentList" class="comment-list"></div>
+            <form id="commentForm" class="comment-input-area">
+                <input type="text" id="commenterName" placeholder="Your Name" required>
+                <textarea id="commentText" placeholder="Leave a respectful comment..." required></textarea>
+                <button type="submit">Post Comment</button>
+            </form>
+        </section>
+    </article>
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>

@@ -28,11 +28,28 @@ function getDashboardImageCandidates(url) {
     return [cleanUrl, '/logo.png'];
 }
 
+function getOfficerPassportUrl(user = {}) {
+    return [
+        user.passportUrl,
+        user.passportURL,
+        user.passport,
+        user.photoUrl,
+        user.photoURL,
+        user.imageUrl,
+        user.imageURL,
+        user["Passport URL"],
+        user["Passport Url"],
+        user["PassportURL"],
+        user["Passport Photo"],
+        user["Photo URL"]
+    ].find((value) => String(value || '').trim() && String(value).trim() !== 'N/A') || '';
+}
+
 export function setupSidebar(user, activeTab = 'profile') {
     const target = document.getElementById('sidebarTarget');
     const activeProfile = activeTab === 'profile' ? 'active' : '';
     const activeLms = activeTab === 'lms' ? 'active' : '';
-    const passportCandidates = getDashboardImageCandidates(user.passportUrl);
+    const passportCandidates = getDashboardImageCandidates(getOfficerPassportUrl(user));
     const sidebarHTML = `
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header"><img src="/logo.png" width="40"><h3>OFFICER PORTAL</h3></div>
@@ -44,6 +61,8 @@ export function setupSidebar(user, activeTab = 'profile') {
                     data-image-candidates='${JSON.stringify(passportCandidates)}'
                     data-image-index="0"
                     alt="Photo"
+                    loading="lazy"
+                    referrerpolicy="no-referrer"
                 >
             </div>
             <h4>${user.surname} ${user.firstName}</h4>

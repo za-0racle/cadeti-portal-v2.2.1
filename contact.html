@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact HQ | CADETI Official Portal</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="/src/styles/contact.css">
+</head>
+<body class="contact-page">
+
+    <!-- Hero Section -->
+    <section class="about-hero contact-hero">
+        <div class="hero-content animate-up">
+            <p class="hero-org">National Headquarters</p>
+            <h1>Contact & Support</h1>
+            <p class="hero-tag">"Connecting the community with our national mission."</p>
+        </div>
+    </section>
+
+    <main class="contact-main section-padding">
+    <div class="container">
+        <div class="contact-grid">
+            
+            <!-- LEFT: FAQ & Info -->
+            <div class="contact-info-area">
+                <h2 class="side-heading">Frequently Asked Questions</h2>
+                <div class="faq-accordion">
+                    <div class="faq-item">
+                        <button class="faq-question">How do I become a CADETI member? <i class="fa-solid fa-plus"></i></button>
+                        <div class="faq-answer"><p>New applicants should visit the "Join Cadet" page and fill the recruitment form. Successful applicants receive a REC ID via email.</p></div>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-question">I lost my Service Number, what should I do? <i class="fa-solid fa-plus"></i></button>
+                        <div class="faq-answer"><p>Use the "Forgot Password" link on the Portal login page to request a recovery from the Security Hub.</p></div>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-question">Is there a training fee? <i class="fa-solid fa-plus"></i></button>
+                        <div class="faq-answer"><p>CADETI training structures vary by state. Please contact your specific State Command for local details.</p></div>
+                    </div>
+                </div>
+
+                <div class="direct-contact-cards">
+                    <div class="info-card">
+                        <i class="fa-solid fa-envelope-open-text"></i>
+                        <div>
+                            <h4>Official Email</h4>
+                            <a href="mailto:cadetinitiative1@gmail.com">cadetinitiative1@gmail.com</a>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <i class="fa-brands fa-whatsapp"></i>
+                        <div>
+                            <h4>WhatsApp Support</h4>
+                            <a href="https://wa.me/2347011888770" target="_blank" rel="noopener">+234 701-1888-770</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: Message Form -->
+            <div class="message-form-area">
+                <div class="form-container contact-form-card">
+                    <h3>Send a Message</h3>
+                    <p class="subtitle">Direct communication to National Command</p>
+                    <form id="contactMsgForm">
+                        <label for="msgName">Full Name</label>
+                        <input type="text" id="msgName" placeholder="Your full name" autocomplete="name" required>
+
+                        <label for="msgEmail">Email Address</label>
+                        <input type="email" id="msgEmail" placeholder="you@example.com" autocomplete="email" required>
+
+                        <label for="msgSubject">Subject</label>
+                        <input type="text" id="msgSubject" placeholder="How can HQ help?" required>
+
+                        <label for="msgBody">Message</label>
+                        <textarea id="msgBody" rows="5" placeholder="Type your message here..." required></textarea>
+                        
+                        <button type="submit" id="submitMsgBtn">
+                            <span class="btn-text">Transmit Message</span>
+                            <div class="spinner"></div>
+                        </button>
+                        <div id="msgStatus" class="status-box" style="display:none;"></div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    </main>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>

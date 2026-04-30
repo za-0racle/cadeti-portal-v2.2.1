@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Admin | CADETI Press Center</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="/src/styles/admin.css">
+    <link rel="stylesheet" href="/src/styles/admin-media.css">
+</head>
+<body class="admin-page">
+
+    <!-- Loading Overlay -->
+    <div id="authGuardLoader" class="login-overlay">
+        <div class="spinner"></div>
+        <p>Syncing Press Credentials...</p>
+    </div>
+
+    <div id="mediaWrapper" class="dashboard-container" style="display: none;">
+        <!-- Sidebar Injection Point -->
+        <div id="mediaSidebarTarget"></div>
+
+        <main class="data-deck">
+            <div class="deck-content">
+                
+                <!-- TAB 1: CONTENT OVERVIEW (LATEST POSTS) -->
+                <div id="section-content-list" class="tab-content">
+                    <header class="deck-header">
+                        <div class="header-title">
+                            <h1>Press Archive</h1>
+                            <div class="status-indicator"><span class="pulse-dot"></span> Publishing Live</div>
+                        </div>
+                        <button class="cmd-btn-small" onclick="window.openComposer()">+ NEW PUBLICATION</button>
+                    </header>
+
+                    <div class="table-container">
+                        <table class="registry-table">
+                            <thead>
+                                <tr><th>Date</th><th>Headline</th><th>Category</th><th>Status</th><th>Actions</th></tr>
+                            </thead>
+                            <tbody id="contentTableBody">
+                                <!-- JS Injection: List of News/Articles -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB 2: COMMENT MODERATION -->
+                <div id="section-moderation" class="tab-content" style="display: none;">
+                    <header class="deck-header"><h1>Comment Moderation</h1></header>
+                    <div id="commentQueue" class="comment-grid">
+                        <!-- JS Injection: Approval cards -->
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- THE COMMAND COMPOSER MODAL (Rich Text Editor) -->
+    <div id="composerModal" class="modal-overlay">
+        <div class="modal-card" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 id="composerTitle">New Publication</h3>
+                <button onclick="window.closeModal('composerModal')">&times;</button>
+            </div>
+            
+            <form id="publicationForm" class="modal-form">
+                <input type="hidden" id="editPostId">
+                
+                <!-- Toggle Category -->
+                <div class="input-group-modal">
+                    <label>Content Type</label>
+                    <select id="postCategory" required>
+                        <option value="news">Command News (Short)</option>
+                        <option value="event">Event / Programme</option>
+                        <option value="article">Article / Column (Long-form)</option>
+                    </select>
+                </div>
+
+                <input type="text" id="postTitle" placeholder="Headline / Title" required>
+                <div class="input-group-modal">
+                    <label>Author / Host Name</label>
+                    <input type="text" id="postAuthor" placeholder="National HQ, Media Directorate, or event host">
+                </div>
+                <div class="input-group-modal">
+                    <label>Publication Status</label>
+                    <select id="postStatus" required>
+                        <option value="published">Published</option>
+                        <option value="scheduled">Scheduled</option>
+                        <option value="draft">Draft</option>
+                    </select>
+                </div>
+                
+                <!-- Image Switcher -->
+                <div class="media-toggle-box">
+                    <label>Cover Media</label>
+                    <div class="toggle-buttons">
+                        <button type="button" id="btn-use-link" class="active">Web Link</button>
+                        <button type="button" id="btn-use-upload">Direct Upload</button>
+                    </div>
+                    <div id="input-link-area">
+                        <input type="text" id="postImageUrl" placeholder="Paste Image URL">
+                    </div>
+                    <div id="input-upload-area" style="display: none;">
+                        <input type="file" id="postImageFile" accept="image/*">
+                    </div>
+                </div>
+
+                <!-- Scheduling & Pinned -->
+                <div class="grid-2">
+                    <div class="input-group-modal">
+                        <label>Schedule Publication</label>
+                        <input type="datetime-local" id="postSchedule">
+                    </div>
+                    <div class="input-group-modal" id="pinToggleArea">
+                        <label>Home Screen</label>
+                        <div class="check-item" style="margin-top: 10px;">
+                            <input type="checkbox" id="isPinned"> <span>Pin to Home Widget</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content Area -->
+                <div class="input-group-modal">
+                    <label>Full Content Body</label>
+                    <textarea id="postBody" rows="12" placeholder="Write the command update here..." required></textarea>
+                </div>
+
+                <button type="submit" class="cmd-btn">EXECUTE PUBLICATION</button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>
