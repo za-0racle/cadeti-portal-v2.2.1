@@ -1,6 +1,6 @@
 import { db, auth, SCRIPT_URL } from '../config.js';
 import {
-    collection, addDoc, getDocs, doc, getDoc, updateDoc, deleteDoc,
+    collection, collectionGroup, addDoc, getDocs, doc, getDoc, updateDoc, deleteDoc,
     query, where, orderBy, serverTimestamp, Timestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -10,6 +10,21 @@ import { getAdminDisplayName, getAdminRole } from '../utils/adminProfile.js';
 
 let allPosts = [];
 let currentAdmin = null;
+
+function escapeHtml(value = "") {
+    return String(value).replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    }[char]));
+}
+
+function closeMediaSidebar() {
+    document.querySelector('#mediaSidebarTarget .cmd-sidebar')?.classList.remove('active');
+    document.getElementById('mediaSidebarBackdrop')?.classList.remove('active');
+}
 
 function openModal(id) {
     const modal = document.getElementById(id);
@@ -101,6 +116,7 @@ async function uploadCoverToDrive(file) {
 
 export async function initMediaDashboard() {
     setupAdminPasswordModal();
+    setupMediaSidebarToggle();
 
     onAuthStateChanged(auth, async (user) => {
         if (!user) {
@@ -124,6 +140,7 @@ export async function initMediaDashboard() {
             setupMediaSidebar(currentAdmin);
             setupComposerListeners();
             await fetchPressArchive();
+            await loadCommentModeration();
 
             if (loader) loader.style.display = 'none';
             if (wrapper) wrapper.style.display = 'flex';
@@ -132,6 +149,32 @@ export async function initMediaDashboard() {
             if (loader) loader.style.display = 'none';
             alert("Unable to load media dashboard.");
         }
+    });
+}
+
+function setupMediaSidebarToggle() {
+    const mobileToggle = document.getElementById('mediaMobileToggle');
+    if (!mobileToggle) return;
+
+    let backdrop = document.getElementById('mediaSidebarBackdrop');
+    if (!backdrop) {
+        backdrop = document.createElement('button');
+        backdrop.type = 'button';
+        backdrop.id = 'mediaSidebarBackdrop';
+        backdrop.className = 'admin-sidebar-backdrop';
+        backdrop.setAttribute('aria-label', 'Close media admin sidebar');
+        document.body.appendChild(backdrop);
+    }
+
+    mobileToggle.addEventListener('click', () => {
+        const sidebar = document.querySelector('#mediaSidebarTarget .cmd-sidebar');
+        const isOpen = sidebar?.classList.toggle('active');
+        backdrop.classList.toggle('active', Boolean(isOpen));
+    });
+
+    backdrop.addEventListener('click', closeMediaSidebar);
+    window.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeMediaSidebar();
     });
 }
 
@@ -255,11 +298,69 @@ async function fetchPressArchive() {
     }
 }
 
+async function loadCommentModeration() {
+    const queue = document.getElementById('commentQueue');
+    if (!queue) return;
+
+    queue.innerHTML = '<div class="comment-card"><p>Syncing comment queue...</p></div>';
+
+    try {
+        const postTitles = new Map(allPosts.map((post) => [post.id, post.title || 'Untitled publication']));
+        const snap = await getDocs(collectionGroup(db, "comments"));
+        const comments = [];
+
+        snap.forEach((item) => {
+            const comment = item.data();
+            if (comment.isApproved === true) return;
+
+            const postRef = item.ref.parent.parent;
+            comments.push({
+                id: item.id,
+                ref: item.ref,
+                postId: postRef?.id || '',
+                postTitle: postTitles.get(postRef?.id) || 'Untitled publication',
+                ...comment
+            });
+        });
+
+        comments.sort((a, b) => {
+            const dateA = toDate(a.timestamp)?.getTime() || 0;
+            const dateB = toDate(b.timestamp)?.getTime() || 0;
+            return dateB - dateA;
+        });
+
+        if (!comments.length) {
+            queue.innerHTML = '<div class="comment-card"><p>No comments awaiting moderation.</p></div>';
+            return;
+        }
+
+        queue.innerHTML = comments.map((comment) => `
+            <article class="comment-card">
+                <div class="comment-card-head">
+                    <span class="author">${escapeHtml(comment.name || 'Anonymous')}</span>
+                    <small>${formatDate(comment.timestamp)}</small>
+                </div>
+                <strong>${escapeHtml(comment.postTitle)}</strong>
+                <p>${escapeHtml(comment.text || '')}</p>
+                <div class="comment-actions">
+                    <button class="cmd-btn-small" type="button" onclick="window.approveComment('${comment.postId}', '${comment.id}')">Approve</button>
+                    <button class="cmd-btn-small danger" type="button" onclick="window.deleteComment('${comment.postId}', '${comment.id}')">Delete</button>
+                </div>
+            </article>
+        `).join('');
+    } catch (error) {
+        console.error('Comment moderation load failed:', error);
+        queue.innerHTML = '<div class="comment-card"><p>Unable to load comment moderation queue.</p></div>';
+    }
+}
+
 window.switchMediaTab = (tabId) => {
     document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
     const target = document.getElementById(`section-${tabId}`);
     if (target) target.style.display = 'block';
     setupMediaSidebar(currentAdmin, tabId);
+    closeMediaSidebar();
+    if (tabId === 'moderation') loadCommentModeration();
 };
 
 window.openComposer = () => {
@@ -297,5 +398,26 @@ window.deletePost = async (id) => {
     if (confirm("Permanently remove this publication from the archive?")) {
         await deleteDoc(doc(db, "publications", id));
         await fetchPressArchive();
+        await loadCommentModeration();
     }
+};
+
+window.approveComment = async (postId, commentId) => {
+    if (!postId || !commentId) return;
+
+    await updateDoc(doc(db, "publications", postId, "comments", commentId), {
+        isApproved: true,
+        approvedAt: serverTimestamp(),
+        approvedBy: auth.currentUser?.uid || ''
+    });
+
+    await loadCommentModeration();
+};
+
+window.deleteComment = async (postId, commentId) => {
+    if (!postId || !commentId) return;
+    if (!confirm("Delete this comment permanently?")) return;
+
+    await deleteDoc(doc(db, "publications", postId, "comments", commentId));
+    await loadCommentModeration();
 };

@@ -48,6 +48,29 @@
 .comment-card p { font-size: 13px; color: #444; margin: 10px 0; }
 .comment-card .author { font-weight: 800; font-size: 11px; color: var(--primary-green); }
 
+.comment-card-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.comment-card-head small {
+    color: #777;
+    font-size: 11px;
+}
+
+.comment-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+}
+
+.comment-actions .danger {
+    background: var(--cmd-red);
+}
+
 .grid-2 {
     display: grid;
     grid-template-columns: 1fr 1fr;

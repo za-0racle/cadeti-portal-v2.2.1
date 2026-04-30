@@ -22,6 +22,11 @@ body {
     line-height: 1.6;
 }
 
+body.mobile-nav-open {
+    overflow: hidden;
+    touch-action: none;
+}
+
 h1, h2, h3, .org-name span {
     font-family: 'Montserrat', sans-serif;
     text-transform: uppercase;
@@ -218,6 +223,8 @@ h1, h2, h3, .org-name span {
         padding: 10px;
         max-height: 0; /* Hidden by default */
         overflow: hidden;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
         transform: translateY(-12px) scale(0.98);
         transform-origin: top right;
         transition:
@@ -234,7 +241,8 @@ h1, h2, h3, .org-name span {
 
     /* When JS toggles the 'active' class */
     .icon-nav.active {
-        max-height: 500px; /* Adjust based on your menu height */
+        max-height: calc(100vh - 110px);
+        overflow-y: auto;
         opacity: 1;
         padding: 14px 10px;
         transform: translateY(0) scale(1);
@@ -279,15 +287,13 @@ h1, h2, h3, .org-name span {
         border: 1px solid rgba(0, 43, 5, 0.04);
     }
 
-    .nav-dropdown:hover .dropdown-content {
-        display: block;
-        max-height: 300px;
-        background: #f8fcf8;
-    }
-
     .nav-dropdown.active .dropdown-content {
         display: block;
         max-height: 300px;
+    }
+
+    .nav-dropdown.active .chevron {
+        transform: rotate(180deg);
     }
 
     .dropdown-content a {
