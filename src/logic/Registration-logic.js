@@ -138,6 +138,8 @@ export async function initRevalidation() {
 export async function initValidation() {
     const lookupBtn = document.getElementById('lookupBtn');
     if (lookupBtn) lookupBtn.onclick = () => lookupRecruit();
+    populateRanks();
+    populateYears(true);
     // Validation Form is hidden initially, but we set listeners for when it appears
     attachGlobalFormListeners('validationForm');
 }
@@ -193,8 +195,22 @@ async function lookupRecruit() {
 
         if (result.status === "success") {
             recruitFullData = result.data;
+            const registrationStatus = String(
+                result.data["Registration Type"] ||
+                result.data["Member Category"] ||
+                result.data["Status"] ||
+                ""
+            ).trim().toLowerCase();
+
+            if (registrationStatus === "converted" || registrationStatus === "validated") {
+                alert("You have already been verified. Go and check your mail.");
+                return;
+            }
+
             // Populate Read-Only using EXACT ORIGINAL KEYS
-            document.getElementById('dispName').value = `${result.data["Surname"]}, ${result.data["First Name"]}`;
+            document.getElementById('dispSurname').value = result.data["Surname"] || "N/A";
+            document.getElementById('dispFirstName').value = result.data["First Name"] || "N/A";
+            document.getElementById('dispOtherName').value = result.data["Other Name"] || result.data["otherName"] || "N/A";
             document.getElementById('dispPhone').value = result.data["Phone Number"] || "N/A";
             document.getElementById('dispEmail').value = result.data["Email"] || result.data["email"] || "N/A";
             document.getElementById('dispGender').value = result.data["Gender"] || "N/A";
@@ -207,7 +223,6 @@ async function lookupRecruit() {
             document.getElementById('searchStep').style.display = 'none';
             document.getElementById('validationForm').style.display = 'block';
             await fetchLocations(); 
-            startTCTimer();
         } else { alert("Recruit ID not found."); }
     } catch (err) { alert("Fetch error."); }
     finally { lookupBtn.disabled = false; lookupBtn.innerText = "Verify ID"; }
@@ -270,10 +285,16 @@ async function handleFormSubmission(e) {
         if (result.status !== "success") {
             throw new Error(result.message || "Submission failed.");
         }
-        alert("Submission Successful! Documents sent to your email.");
-        document.getElementById('successMessage').style.display = "block";
+        const successMessage = document.getElementById('successMessage');
+        if (successMessage) successMessage.style.display = "block";
+        if (!isVal) alert("Submission Successful! Documents sent to your email.");
         e.target.reset();
         window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (isVal) {
+            setTimeout(() => {
+                window.location.href = "/member-validation.html";
+            }, 2500);
+        }
     } catch (err) { alert(err.message || "Submission failed."); submitBtn.disabled = false; }
     finally { submitBtn.classList.remove("loading"); }
 }
@@ -281,7 +302,7 @@ async function handleFormSubmission(e) {
 function populateRanks() {
     const r = document.getElementById('rank');
     if (!r) return;
-    const ranks = ["Assistant Brigade Commander", "Commander", "Deputy Commander", "Assistant Commander", "Chief Superintendent", "Superintendent", "Deputy Superintendent", "Assistant Superintendent I", "Assistant Superintendent II", "Inspector", "Deputy Inspector", "Assistant Inspector", "Staff Sergeant", "Sergeant", "Corporal", "Lance Corporal", "Private"];
+    const ranks = ["Brigade Commander", "Deputy Brigade Commander", "Assistant Brigade Commander", "Commander", "Deputy Commander", "Assistant Commander", "Chief Superintendent", "Superintendent", "Deputy Superintendent", "Assistant Superintendent I", "Assistant Superintendent II", "Inspector", "Deputy Inspector", "Assistant Inspector", "Staff Sergeant", "Sergeant", "Corporal", "Lance Corporal", "Private"];
     r.innerHTML = '<option value="">Select Rank</option>';
     ranks.forEach(rank => r.add(new Option(rank, rank)));
 }

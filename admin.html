@@ -201,10 +201,11 @@
     <div id="courseModal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-header">
-                <h3>Publish New Course</h3>
+                <h3 id="courseModalTitle">Publish New Course</h3>
                 <button type="button" data-close-modal="courseModal">&times;</button>
             </div>
             <form id="courseForm" class="modal-form">
+                <input type="hidden" id="courseId">
                 <input type="text" id="cTitle" placeholder="Course Title" required>
                 <textarea id="cDesc" placeholder="Brief Course Description" rows="3"></textarea>
                 <div class="input-group-modal">
@@ -214,18 +215,33 @@
                 <div class="grid-2">
                     <div class="multi-select-area">
                         <label>Eligible Depts</label>
-                        <div id="cDeptsList" class="checkbox-grid"></div>
+                        <details class="multi-dropdown">
+                            <summary id="cDeptsSummary">Departments</summary>
+                            <div id="cDeptsList" class="checkbox-grid"></div>
+                        </details>
                     </div>
                     <div class="multi-select-area">
                         <label>Eligible States</label>
-                        <div id="cStatesList" class="checkbox-grid"></div>
+                        <details class="multi-dropdown">
+                            <summary id="cStatesSummary">States</summary>
+                            <div id="cStatesList" class="checkbox-grid"></div>
+                        </details>
                     </div>
                 </div>
                 <div class="input-group-modal">
-                    <label for="cBadge">Badge URL (Drive Link)</label>
-                    <input type="text" id="cBadge" placeholder="Paste link here">
+                    <label>Badge Image</label>
+                    <div class="badge-source-toggle" role="group" aria-label="Badge image source">
+                        <label><input type="radio" name="badgeSource" value="link" checked> Link</label>
+                        <label><input type="radio" name="badgeSource" value="upload"> Upload</label>
+                    </div>
+                    <div id="badgeLinkField">
+                        <input type="text" id="cBadge" placeholder="Paste image or Drive link here">
+                    </div>
+                    <div id="badgeUploadField" style="display: none;">
+                        <input type="file" id="cBadgeFile" accept="image/*">
+                    </div>
                 </div>
-                <button type="submit" class="cmd-btn">Deploy Course</button>
+                <button type="submit" class="cmd-btn" id="courseSubmitBtn">Deploy Course</button>
             </form>
         </div>
     </div>

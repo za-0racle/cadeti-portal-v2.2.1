@@ -93,6 +93,10 @@ function doPost(e) {
       return updateOfficerProfile(data);
     }
 
+    if (data.action === "deleteOfficerRecord") {
+      return deleteOfficerRecord(data);
+    }
+
     return registerMember(data);
   } catch (error) {
     return errorResponse(error.message || error.toString());
@@ -119,6 +123,23 @@ function registerMember(data) {
     requireObjectFields(data, ["uniqueID", "serviceNumber", "rank", "state", "area"]);
   }
 
+  let recruit = null;
+  if (data.regType === "Validation") {
+    recruit = findRecordByHeader(recruitSheet, "Unique ID", data.originalID || "");
+    if (!recruit) throw new Error("Recruit ID not found.");
+
+    const registrationStatus = String(
+      recruit.record["Registration Type"] ||
+      recruit.record["Member Category"] ||
+      recruit.record["Status"] ||
+      ""
+    ).trim().toLowerCase();
+
+    if (registrationStatus === "converted" || registrationStatus === "validated") {
+      throw new Error("You have already been verified. Go and check your mail.");
+    }
+  }
+
   let passportUrl = "N/A";
   let imageBlob = null;
   if (data.passportData) {
@@ -135,7 +156,6 @@ function registerMember(data) {
   const pdfUrl = createOfficialPDF(data, uniqueID, serviceNumber, imageBlob, templateId);
 
   if (data.regType === "Validation") {
-    const recruit = findRecordByHeader(recruitSheet, "Unique ID", data.originalID || "");
     if (recruit) setByHeader(recruitSheet, recruit.rowNumber, "Registration Type", "Converted");
   }
 
@@ -224,6 +244,48 @@ function updateOfficerProfile(data) {
   return jsonResponse({ status: "success", data: getRecordAtRow(sheet, result.rowNumber) });
 }
 
+function deleteOfficerRecord(data) {
+  if (!data.uniqueID && !data.serviceNumber) throw new Error("Missing uniqueID or serviceNumber.");
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheets = [
+    getRequiredSheet(ss, "Sheet1"),
+    getRequiredSheet(ss, "Recruits")
+  ];
+
+  for (let i = 0; i < sheets.length; i++) {
+    const sheet = sheets[i];
+    let result = null;
+
+    if (data.uniqueID) {
+      try {
+        result = findRecordByHeader(sheet, "Unique ID", data.uniqueID);
+      } catch (error) {
+        result = null;
+      }
+    }
+
+    if (!result && data.serviceNumber) {
+      try {
+        result = findRecordByHeader(sheet, "Service Number", data.serviceNumber);
+      } catch (error) {
+        result = null;
+      }
+    }
+
+    if (result) {
+      if (data.state && result.record["State Command"] && result.record["State Command"] !== data.state) {
+        throw new Error("State command mismatch. Record was not deleted.");
+      }
+
+      sheet.deleteRow(result.rowNumber);
+      return jsonResponse({ status: "success" });
+    }
+  }
+
+  throw new Error("Officer record not found.");
+}
+
 function getGalleryData() {
   const rootFolder = DriveApp.getFolderById(GALLERY_ROOT_FOLDER_ID);
   const subFolders = rootFolder.getFolders();
@@ -291,9 +353,15 @@ function getRecordAtRow(sheet, rowNumber) {
 }
 
 function setByHeader(sheet, rowNumber, headerName, value) {
-  const headers = normalizeHeaders(sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0]);
-  const index = headers.indexOf(headerName);
-  if (index === -1) throw new Error(`Missing sheet header: ${headerName}`);
+  const lastColumn = Math.max(sheet.getLastColumn(), 1);
+  const headers = normalizeHeaders(sheet.getRange(1, 1, 1, lastColumn).getValues()[0]);
+  let index = headers.indexOf(headerName);
+
+  if (index === -1) {
+    index = headers.length;
+    sheet.getRange(1, index + 1).setValue(headerName);
+  }
+
   sheet.getRange(rowNumber, index + 1).setValue(value);
 }
 

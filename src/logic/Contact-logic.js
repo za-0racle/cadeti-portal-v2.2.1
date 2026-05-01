@@ -86,7 +86,7 @@ export function initContactPage() {
 
             try {
                 await sendInquiryEmail(formData);
-                archiveInquiry(formData);
+                void archiveInquiry(formData);
 
                 statusBox.style.display = 'block';
                 statusBox.style.background = '#dcfce7';

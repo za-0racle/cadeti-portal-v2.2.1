@@ -36,7 +36,11 @@
         <div class="profile-preview-card">
             <p class="preview-header">Recruit Bio-Data Found:</p>
             <div class="grid">
-                <input type="text" id="dispName" readonly title="Full Name">
+                <input type="text" id="dispSurname" readonly title="Surname" placeholder="Surname">
+                <input type="text" id="dispFirstName" readonly title="First Name" placeholder="First Name">
+            </div>
+            <div class="grid">
+                <input type="text" id="dispOtherName" readonly title="Other Name" placeholder="Other Name">
                 <input type="text" id="dispPhone" readonly title="Phone">
             </div>
             <div class="grid">
@@ -90,12 +94,25 @@
             </div>
             
             <input type="text" id="areaOC" placeholder="Area OC Full Name" required>
-            <input type="text" id="rank" placeholder="Assigned Rank (e.g. Private)" required>
+            <select id="rank" required>
+                <option value="">Select Assigned Rank</option>
+            </select>
             <input type="text" id="postHeld" placeholder="Current Post Held">
         </div>
 
         <!-- T&C AND SUBMIT -->
-        <div id="tcArea" style="display:block;">
+        <div id="tcTriggerSection" class="agree-row" style="background: #fff5f5; border: 1px solid #ffcccc; margin-top: 25px; padding: 15px; border-radius: 8px;">
+          <div style="text-align: left;">
+            <p style="font-size: 13px; font-weight: 600; color: #c00; margin-bottom: 5px;">Final Step: Official Declaration</p>
+            <a href="javascript:void(0)" id="openTCBtn" style="color: #0b3d91; font-weight: 600; text-decoration: underline; font-size: 13px;">Read Terms & Conditions to Submit</a>
+          </div>
+        </div>
+
+        <div id="tcArea" style="display:none; margin-top: 20px; border: 2px solid green; padding: 15px; border-radius: 8px;">
+            <div class="tc-scroll-box">
+                <p><strong>1. Accuracy:</strong> I confirm that all official service data entered above is correct.</p><br>
+                <p><strong>2. Authorization:</strong> I understand that falsified rank, command, or service details can invalidate this validation.</p>
+            </div>
             <div class="timer-bar-wrap"><div class="timer-bar" id="tbar"></div></div>
             <p class="timer-label" id="tlabel">Verifying official data — <span id="tcountdown">15</span>s</p>
             <div class="agree-row-checkbox">

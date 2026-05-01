@@ -445,6 +445,15 @@
     transform: translateY(-2px);
 }
 
+.danger-icon {
+    color: var(--cmd-red);
+}
+
+.danger-icon:hover {
+    background: #fff5f5;
+    color: #9f1239;
+}
+
 .cmd-btn {
     width: 100%;
     padding: 15px;
@@ -608,13 +617,37 @@
 .input-group-modal select,
 .modal-form textarea,
 .modal-form input[type="text"],
-.modal-form input[type="email"] {
+.modal-form input[type="email"],
+.modal-form input[type="file"] {
     padding: 14px;
     border: 1.5px solid #eee;
     border-radius: 12px;
     font-family: 'Poppins', sans-serif;
     font-size: 14px;
     background: #fafafa;
+}
+
+.badge-source-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.badge-source-toggle label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1.5px solid #eee;
+    border-radius: 10px;
+    background: #fafafa;
+    color: #333;
+    cursor: pointer;
+}
+
+.badge-source-toggle input {
+    width: auto;
 }
 
 .grid-2 {
@@ -626,12 +659,44 @@
 .checkbox-grid {
     background: #f9f9f9;
     border: 1px solid #eee;
-    border-radius: 12px;
+    border-radius: 0 0 12px 12px;
     padding: 15px;
     max-height: 150px;
     overflow-y: auto;
     display: grid;
     gap: 10px;
+}
+
+.multi-dropdown {
+    position: relative;
+}
+
+.multi-dropdown summary {
+    list-style: none;
+    padding: 14px;
+    border: 1.5px solid #eee;
+    border-radius: 12px;
+    background: #fafafa;
+    color: #444;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.multi-dropdown summary::-webkit-details-marker {
+    display: none;
+}
+
+.multi-dropdown summary::after {
+    content: "\f078";
+    float: right;
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    font-size: 11px;
+    color: #888;
+}
+
+.multi-dropdown[open] summary {
+    border-radius: 12px 12px 0 0;
 }
 
 .check-item {
@@ -748,6 +813,16 @@
     font-size: 13px;
     color: #4b5563;
     margin-bottom: 14px;
+}
+
+.course-card-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.danger-btn {
+    background: var(--cmd-red);
 }
 
 .text-center {

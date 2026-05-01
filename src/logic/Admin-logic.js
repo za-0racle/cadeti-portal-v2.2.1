@@ -1,5 +1,6 @@
-import { db, auth, SCRIPT_URL } from '../config.js';
+import { db, auth, SCRIPT_URL, storage } from '../config.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getDownloadURL, ref, uploadBytes } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 import {
     addDoc,
     collection,
@@ -34,6 +35,7 @@ let adminRole = "";
 let adminState = "";
 let adminProfile = {};
 let currentTransferOfficer = null;
+let allCourses = [];
 
 async function postScriptAction(payload) {
     const response = await fetch(SCRIPT_URL, {
@@ -122,6 +124,7 @@ function bindAdminUI() {
     const courseForm = document.getElementById('courseForm');
     const adminForm = document.getElementById('adminForm');
     const targetState = document.getElementById('targetState');
+    const badgeSourceRadios = document.querySelectorAll('input[name="badgeSource"]');
 
     if (transferBtn) transferBtn.addEventListener('click', openTransferModal);
     if (verifyTransferBtn) verifyTransferBtn.addEventListener('click', window.verifyTransfer);
@@ -167,6 +170,9 @@ function bindAdminUI() {
     if (courseForm) courseForm.addEventListener('submit', submitCourse);
     if (adminForm) adminForm.addEventListener('submit', submitAdmin);
     if (targetState) targetState.addEventListener('change', (e) => populateTargetAreas(e.target.value));
+    badgeSourceRadios.forEach((radio) => {
+        radio.addEventListener('change', updateBadgeSourceFields);
+    });
 
     if (sidebarTarget) {
         sidebarTarget.addEventListener('click', (e) => {
@@ -179,6 +185,20 @@ function bindAdminUI() {
     document.querySelectorAll('[data-close-modal]').forEach((btn) => {
         btn.addEventListener('click', () => closeModal(btn.dataset.closeModal));
     });
+}
+
+function updateBadgeSourceFields() {
+    const source = document.querySelector('input[name="badgeSource"]:checked')?.value || 'link';
+    const linkField = document.getElementById('badgeLinkField');
+    const uploadField = document.getElementById('badgeUploadField');
+    const linkInput = document.getElementById('cBadge');
+    const fileInput = document.getElementById('cBadgeFile');
+    const isEditing = Boolean(document.getElementById('courseId')?.value);
+
+    if (linkField) linkField.style.display = source === 'link' ? 'block' : 'none';
+    if (uploadField) uploadField.style.display = source === 'upload' ? 'block' : 'none';
+    if (linkInput) linkInput.required = false;
+    if (fileInput) fileInput.required = source === 'upload' && !isEditing;
 }
 
 function hydrateAdminShell(adminData, user) {
@@ -309,6 +329,9 @@ function renderTable(data) {
 
     tbody.innerHTML = [...data].reverse().map((o) => {
         const uniqueId = o["Unique ID"] || o["Service Number"] || 'N/A';
+        const serviceNumber = o["Service Number"] || '';
+        const safeUniqueId = String(uniqueId).replace(/'/g, "\\'");
+        const safeServiceNumber = String(serviceNumber).replace(/'/g, "\\'");
         const name = `${o["Surname"] || ''}, ${o["First Name"] || ''}`.replace(/^,\s*/, '');
         const timestamp = o["Timestamp"] ? String(o["Timestamp"]).split('T')[0] : 'N/A';
         return `
@@ -321,8 +344,9 @@ function renderTable(data) {
                 <td>${o["State Command"] || 'N/A'}</td>
                 <td>
                     <div class="row-actions">
-                        <button class="action-icon" type="button" onclick="window.openEditModal('${String(uniqueId).replace(/'/g, "\\'")}')"><i class="fa-solid fa-user-pen"></i></button>
-                        ${o["PDF URL"] ? `<a href="${o["PDF URL"]}" target="_blank" class="pdf-btn">PDF</a>` : `<button class="action-icon" type="button" onclick="window.viewOfficer('${String(uniqueId).replace(/'/g, "\\'")}')"><i class="fa-solid fa-eye"></i></button>`}
+                        <button class="action-icon" type="button" title="Edit officer" onclick="window.openEditModal('${safeUniqueId}')"><i class="fa-solid fa-user-pen"></i></button>
+                        ${o["PDF URL"] ? `<a href="${o["PDF URL"]}" target="_blank" class="pdf-btn">PDF</a>` : `<button class="action-icon" type="button" title="View officer" onclick="window.viewOfficer('${safeUniqueId}')"><i class="fa-solid fa-eye"></i></button>`}
+                        <button class="action-icon danger-icon" type="button" title="Delete officer" onclick="window.deleteOfficerRecord('${safeUniqueId}', '${safeServiceNumber}')"><i class="fa-solid fa-trash"></i></button>
                     </div>
                 </td>
             </tr>
@@ -549,14 +573,20 @@ async function loadCourseManager() {
     try {
         const snap = await getDocs(collection(db, "courses"));
         const cards = [];
+        allCourses = [];
         snap.forEach((docSnap) => {
-            const c = docSnap.data();
+            const c = { id: docSnap.id, ...docSnap.data() };
+            allCourses.push(c);
+            const safeId = String(docSnap.id).replace(/'/g, "\\'");
             cards.push(`
                 <div class="course-card">
                     <small>Rank Req: ${c.minRankLevel || 'N/A'}</small>
                     <h4>${c.title || 'Untitled Course'}</h4>
                     <p>${c.description || 'No description added yet.'}</p>
-                    <button class="cmd-btn-small" type="button" onclick="window.deleteCourse('${docSnap.id}')">REMOVE</button>
+                    <div class="course-card-actions">
+                        <button class="cmd-btn-small" type="button" onclick="window.openCourseEditor('${safeId}')">EDIT</button>
+                        <button class="cmd-btn-small danger-btn" type="button" onclick="window.deleteCourse('${safeId}')">REMOVE</button>
+                    </div>
                 </div>
             `);
         });
@@ -649,25 +679,65 @@ async function submitCourse(e) {
     e.preventDefault();
     if (!(adminRole === 'super' || adminRole === 'national')) return;
 
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const badgeSource = document.querySelector('input[name="badgeSource"]:checked')?.value || 'link';
+    const courseId = document.getElementById('courseId')?.value || '';
+    const isEditing = Boolean(courseId);
+    let badgeUrl = document.getElementById('cBadge')?.value || '';
+
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = badgeSource === 'upload' ? 'Uploading Badge...' : isEditing ? 'Updating Course...' : 'Deploying Course...';
+    }
+
     const payload = {
         title: document.getElementById('cTitle')?.value || '',
         description: document.getElementById('cDesc')?.value || '',
         minRankLevel: document.getElementById('cRank')?.value || '',
-        badgeUrl: document.getElementById('cBadge')?.value || '',
-        eligibleDepts: [...document.querySelectorAll('input[name="eligibleDepts"]:checked')].map((el) => el.value),
-        eligibleStates: [...document.querySelectorAll('input[name="eligibleStates"]:checked')].map((el) => el.value),
-        createdAt: serverTimestamp()
+        badgeUrl,
+        eligibleDepts: getCheckedValues('eligibleDepts'),
+        eligibleStates: getCheckedValues('eligibleStates'),
+        updatedAt: serverTimestamp()
     };
 
+    if (!isEditing) payload.createdAt = serverTimestamp();
+
     try {
-        await addDoc(collection(db, "courses"), payload);
-        alert("Course deployed.");
+        if (badgeSource === 'upload') {
+            const file = document.getElementById('cBadgeFile')?.files?.[0];
+            if (!file && !isEditing) throw new Error("Select a badge image to upload.");
+
+            if (file) {
+                if (!file.type.startsWith('image/')) throw new Error("Badge upload must be an image file.");
+                if (file.size > 5242880) throw new Error("Badge image must be 5MB or smaller.");
+
+                const safeName = file.name.replace(/[^a-z0-9.-]/gi, '_').toLowerCase();
+                const badgeRef = ref(storage, `course-badges/${Date.now()}-${safeName}`);
+                await uploadBytes(badgeRef, file);
+                payload.badgeUrl = await getDownloadURL(badgeRef);
+            } else {
+                payload.badgeUrl = allCourses.find((course) => course.id === courseId)?.badgeUrl || '';
+            }
+        }
+
+        if (isEditing) {
+            await updateDoc(doc(db, "courses", courseId), payload);
+        } else {
+            await addDoc(collection(db, "courses"), payload);
+        }
+
+        alert(isEditing ? "Course updated." : "Course deployed.");
         closeModal('courseModal');
-        document.getElementById('courseForm')?.reset();
+        resetCourseForm();
         await loadCourseManager();
     } catch (error) {
         console.error(error);
-        alert("Unable to deploy course.");
+        alert(error.message || "Unable to deploy course.");
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = isEditing ? 'Update Course' : 'Deploy Course';
+        }
     }
 }
 
@@ -695,7 +765,19 @@ async function submitAdmin(e) {
     }
 }
 
-function initCourseModal() {
+function getCheckedValues(name) {
+    return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map((el) => el.value);
+}
+
+function updateMultiDropdownSummary(name, summaryId, fallback) {
+    const summary = document.getElementById(summaryId);
+    if (!summary) return;
+
+    const count = getCheckedValues(name).length;
+    summary.textContent = count ? `${count} selected` : fallback;
+}
+
+function populateCourseSelectors(selectedDepts = [], selectedStates = []) {
     const cRank = document.getElementById('cRank');
     if (cRank && cRank.options.length <= 1) {
         cRank.innerHTML = '<option value="">Select Rank Level</option>';
@@ -705,20 +787,63 @@ function initCourseModal() {
     const deptList = document.getElementById('cDeptsList');
     if (deptList) {
         deptList.innerHTML = DEPT_LIST.map((dept) => `
-            <label class="check-item"><input type="checkbox" name="eligibleDepts" value="${dept}"> ${dept}</label>
+            <label class="check-item"><input type="checkbox" name="eligibleDepts" value="${dept}" ${selectedDepts.includes(dept) ? 'checked' : ''}> ${dept}</label>
         `).join('');
+        deptList.querySelectorAll('input[name="eligibleDepts"]').forEach((input) => {
+            input.addEventListener('change', () => updateMultiDropdownSummary('eligibleDepts', 'cDeptsSummary', 'Departments'));
+        });
     }
 
     const stateList = document.getElementById('cStatesList');
     if (stateList) {
-        const states = [...new Set(allOfficers.map((item) => item["State Command"]).filter(Boolean))].sort();
+        const states = [...new Set([
+            ...allOfficers.map((item) => item["State Command"]).filter(Boolean),
+            ...selectedStates
+        ])].sort();
         stateList.innerHTML = states.map((state) => `
-            <label class="check-item"><input type="checkbox" name="eligibleStates" value="${state}"> ${state}</label>
+            <label class="check-item"><input type="checkbox" name="eligibleStates" value="${state}" ${selectedStates.includes(state) ? 'checked' : ''}> ${state}</label>
         `).join('');
+        stateList.querySelectorAll('input[name="eligibleStates"]').forEach((input) => {
+            input.addEventListener('change', () => updateMultiDropdownSummary('eligibleStates', 'cStatesSummary', 'States'));
+        });
     }
 
+    updateMultiDropdownSummary('eligibleDepts', 'cDeptsSummary', 'Departments');
+    updateMultiDropdownSummary('eligibleStates', 'cStatesSummary', 'States');
+}
+
+function resetCourseForm() {
+    document.getElementById('courseForm')?.reset();
+    document.getElementById('courseId').value = '';
+    document.getElementById('courseModalTitle').textContent = 'Publish New Course';
+    document.getElementById('courseSubmitBtn').textContent = 'Deploy Course';
+    const linkSource = document.querySelector('input[name="badgeSource"][value="link"]');
+    if (linkSource) linkSource.checked = true;
+    populateCourseSelectors();
+    updateBadgeSourceFields();
+}
+
+function initCourseModal() {
+    resetCourseForm();
     openModal('courseModal');
 }
+
+window.openCourseEditor = (courseId) => {
+    const course = allCourses.find((item) => item.id === courseId);
+    if (!course) return;
+
+    resetCourseForm();
+    document.getElementById('courseId').value = courseId;
+    document.getElementById('courseModalTitle').textContent = 'Edit Course';
+    document.getElementById('courseSubmitBtn').textContent = 'Update Course';
+    document.getElementById('cTitle').value = course.title || '';
+    document.getElementById('cDesc').value = course.description || '';
+    document.getElementById('cRank').value = course.minRankLevel || '';
+    document.getElementById('cBadge').value = course.badgeUrl || '';
+    populateCourseSelectors(course.eligibleDepts || [], course.eligibleStates || []);
+    updateBadgeSourceFields();
+    openModal('courseModal');
+};
 
 window.openEditModal = (uid) => {
     const officer = allOfficers.find((o) => (o["Unique ID"] || o["Service Number"]) === uid);
@@ -736,6 +861,66 @@ window.openEditModal = (uid) => {
 window.viewOfficer = (uniqueId) => {
     if (!uniqueId) return;
     alert(`Officer record selected: ${uniqueId}`);
+};
+
+async function deleteUserDocsForOfficer(officer) {
+    const uniqueID = officer["Unique ID"] || "";
+    const serviceNumber = officer["Service Number"] || "";
+    const matches = [];
+
+    if (uniqueID) {
+        const uniqueSnap = await getDocs(query(collection(db, "users"), where("uniqueID", "==", uniqueID)));
+        matches.push(...uniqueSnap.docs);
+    }
+
+    if (serviceNumber) {
+        const serviceSnap = await getDocs(query(collection(db, "users"), where("serviceNumber", "==", serviceNumber)));
+        matches.push(...serviceSnap.docs);
+    }
+
+    const seen = new Set();
+    await Promise.all(matches.filter((docSnap) => {
+        if (seen.has(docSnap.id)) return false;
+        seen.add(docSnap.id);
+        return true;
+    }).map((docSnap) => deleteDoc(doc(db, "users", docSnap.id))));
+}
+
+window.deleteOfficerRecord = async (uniqueId, serviceNumber = '') => {
+    const officer = allOfficers.find((item) => {
+        return (item["Unique ID"] || item["Service Number"]) === uniqueId
+            || (serviceNumber && item["Service Number"] === serviceNumber);
+    });
+    if (!officer) return alert("Officer record not found.");
+
+    if (adminRole === 'state' && adminState && officer["State Command"] !== adminState) {
+        return alert("You can only delete records under your assigned state command.");
+    }
+
+    const name = `${officer["Surname"] || ''} ${officer["First Name"] || ''}`.trim() || uniqueId;
+    const idLabel = officer["Service Number"] || officer["Unique ID"] || uniqueId;
+    if (!confirm(`Delete ${name} (${idLabel}) from the registry? This cannot be undone.`)) return;
+
+    try {
+        await postScriptAction({
+            action: "deleteOfficerRecord",
+            uniqueID: officer["Unique ID"] || "",
+            serviceNumber: officer["Service Number"] || "",
+            state: officer["State Command"] || ""
+        });
+
+        try {
+            await deleteUserDocsForOfficer(officer);
+        } catch (firestoreError) {
+            console.warn("Firestore profile cleanup failed:", firestoreError);
+        }
+
+        alert("Officer record deleted.");
+        await fetchRegistry();
+    } catch (error) {
+        console.error(error);
+        alert(error.message || "Unable to delete officer record.");
+    }
 };
 
 window.updateEnrollment = async (id, status) => {
