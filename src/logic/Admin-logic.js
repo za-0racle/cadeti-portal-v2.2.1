@@ -93,6 +93,80 @@ async function uploadCourseBadge(file) {
     }
 }
 
+function extractDriveFileId(url) {
+    const cleanUrl = String(url || '').trim();
+    if (!cleanUrl || cleanUrl === "N/A") return "";
+
+    if (cleanUrl.includes("drive.google.com")) {
+        const driveId = cleanUrl.match(/[-\w]{25,}/);
+        return driveId?.[0] || "";
+    }
+
+    return "";
+}
+
+function getImageCandidates(url) {
+    const cleanUrl = String(url || '').trim();
+    if (!cleanUrl || cleanUrl === "N/A") return ["/logo.png"];
+
+    const driveId = extractDriveFileId(cleanUrl);
+    if (driveId) {
+        return [
+            `https://drive.google.com/thumbnail?id=${driveId}&sz=w1000`,
+            `https://drive.google.com/uc?export=view&id=${driveId}`,
+            `https://lh3.googleusercontent.com/d/${driveId}=w1000`,
+            cleanUrl,
+            "/logo.png"
+        ];
+    }
+
+    return [cleanUrl, "/logo.png"];
+}
+
+function createAdminImageMarkup(url, alt, className = '') {
+    const candidates = getImageCandidates(url);
+    const safeAlt = String(alt || 'Image').replace(/"/g, '&quot;');
+    const imageClass = ['admin-managed-image', className].filter(Boolean).join(' ');
+    return `
+        <img
+            class="${imageClass}"
+            src="${candidates[0]}"
+            data-image-candidates='${JSON.stringify(candidates)}'
+            data-image-index="0"
+            alt="${safeAlt}"
+            loading="lazy"
+            referrerpolicy="no-referrer"
+        >
+    `;
+}
+
+function wireAdminImages(root = document) {
+    root.querySelectorAll('.admin-managed-image').forEach((image) => {
+        if (image.dataset.imageBound === 'true') return;
+        image.dataset.imageBound = 'true';
+
+        image.addEventListener('error', () => {
+            let candidates = [];
+            try {
+                candidates = JSON.parse(image.dataset.imageCandidates || '[]');
+            } catch (error) {
+                candidates = [];
+            }
+
+            const nextIndex = Number(image.dataset.imageIndex || 0) + 1;
+            if (candidates[nextIndex]) {
+                image.dataset.imageIndex = String(nextIndex);
+                image.src = candidates[nextIndex];
+                return;
+            }
+
+            if (image.getAttribute('src') !== '/logo.png') {
+                image.src = '/logo.png';
+            }
+        });
+    });
+}
+
 function closeAdminSidebar() {
     document.querySelector('.cmd-sidebar')?.classList.remove('active');
     document.getElementById('adminSidebarBackdrop')?.classList.remove('active');
@@ -621,8 +695,12 @@ async function loadCourseManager() {
             const c = { id: docSnap.id, ...docSnap.data() };
             allCourses.push(c);
             const safeId = String(docSnap.id).replace(/'/g, "\\'");
+            const badgeSource = c.badgeUrl || '';
             cards.push(`
                 <div class="course-card">
+                    <div class="admin-course-badge">
+                        ${createAdminImageMarkup(badgeSource, c.title || 'Course badge')}
+                    </div>
                     <small>Rank Req: ${c.minRankLevel || 'N/A'}</small>
                     <h4>${c.title || 'Untitled Course'}</h4>
                     <p>${c.description || 'No description added yet.'}</p>
@@ -634,6 +712,7 @@ async function loadCourseManager() {
             `);
         });
         grid.innerHTML = cards.length ? cards.join('') : '<div class="placeholder-surface"><h3>No courses published</h3><p>Create your first course from the button above.</p></div>';
+        wireAdminImages(grid);
     } catch (error) {
         grid.innerHTML = '<div class="placeholder-surface"><h3>Publisher unavailable</h3><p>Unable to load course data right now.</p></div>';
     }

@@ -29,11 +29,15 @@ const FALLBACK_BADGE_POOL = [
 
 function getCourseBadgeSource(course = {}, index = 0) {
     const normalizedTitle = String(course.title || '').trim().toLowerCase();
+    if (course.badgeUrl) {
+        return course.badgeUrl;
+    }
+
     if (COURSE_BADGE_OVERRIDES[normalizedTitle]) {
         return COURSE_BADGE_OVERRIDES[normalizedTitle];
     }
 
-    return course.badgeUrl || FALLBACK_BADGE_POOL[index % FALLBACK_BADGE_POOL.length];
+    return FALLBACK_BADGE_POOL[index % FALLBACK_BADGE_POOL.length];
 }
 
 function extractDriveFileId(url) {
