@@ -256,6 +256,7 @@ function updateActiveSidebarTab(tab) {
 function closeSidebar() {
     document.getElementById('sidebar')?.classList.remove('active');
     document.getElementById('dashboardSidebarBackdrop')?.classList.remove('active');
+    document.body.classList.remove('dashboard-sidebar-open');
 }
 
 function setupTabListeners() {
@@ -299,6 +300,7 @@ function setupSidebarToggle() {
     toggle.addEventListener('click', () => {
         const isOpen = sidebar.classList.toggle('active');
         backdrop.classList.toggle('active', isOpen);
+        document.body.classList.toggle('dashboard-sidebar-open', isOpen);
     });
 
     backdrop.addEventListener('click', closeSidebar);

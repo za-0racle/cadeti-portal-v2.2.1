@@ -7,6 +7,7 @@
         radial-gradient(circle at top left, rgba(76, 175, 80, 0.18), transparent 28%),
         radial-gradient(circle at top right, rgba(204, 0, 0, 0.12), transparent 24%),
         linear-gradient(180deg, #f2f6f2 0%, #e7efe7 100%);
+    overflow-x: hidden;
 }
 
 .dashboard-layout {
@@ -15,21 +16,48 @@
 }
 
 .sidebar {
-    width: 290px;
-    background: linear-gradient(180deg, #042d08 0%, #0a4211 100%);
+    width: 280px;
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.08), transparent 28%),
+        linear-gradient(180deg, #031f07 0%, #073d0e 48%, #07180b 100%);
     color: #fff;
-    padding: 28px 20px;
+    padding: 22px 16px;
     display: flex;
     flex-direction: column;
-    gap: 22px;
-    box-shadow: 20px 0 50px rgba(4, 27, 8, 0.16);
+    gap: 16px;
+    box-shadow: 20px 0 50px rgba(4, 27, 8, 0.22);
     position: sticky;
     top: 0;
     height: 100vh;
     overflow-y: auto;
     overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
     z-index: 30;
     transition: transform 0.35s ease;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.26) transparent;
+}
+
+body.dashboard-sidebar-open {
+    overflow: hidden;
+}
+
+body.dashboard-sidebar-open .main-content {
+    overflow: hidden;
+    touch-action: none;
+}
+
+body.dashboard-sidebar-open .sidebar {
+    touch-action: pan-y;
+}
+
+.sidebar::-webkit-scrollbar {
+    width: 7px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.24);
+    border-radius: 999px;
 }
 
 .sidebar-backdrop {
@@ -39,38 +67,55 @@
 .sidebar-header,
 .user-profile-brief,
 .side-nav {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.09);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 18px;
+    backdrop-filter: blur(14px);
 }
 
 .sidebar-header {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 16px 18px;
+    padding: 14px 15px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .sidebar-header h3 {
     margin: 0;
-    font-size: 1rem;
+    font-size: 0.92rem;
     letter-spacing: 0.08em;
     color: #fff;
 }
 
 .user-profile-brief {
-    padding: 22px 18px;
+    position: relative;
+    padding: 20px 16px;
     text-align: center;
+    overflow: hidden;
+}
+
+.user-profile-brief::before {
+    content: "";
+    position: absolute;
+    inset: -40% -20% auto;
+    height: 130px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+    transform: rotate(-10deg) translateX(-45%);
+    animation: sidebar-sheen 6s ease-in-out infinite;
 }
 
 .avatar-frame {
-    width: 88px;
-    height: 88px;
-    margin: 0 auto 14px;
+    width: 82px;
+    height: 82px;
+    margin: 0 auto 12px;
     border-radius: 50%;
     overflow: hidden;
-    border: 3px solid rgba(255, 255, 255, 0.24);
+    border: 3px solid rgba(255, 255, 255, 0.34);
     background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.06), 0 16px 28px rgba(0, 0, 0, 0.24);
+    position: relative;
+    z-index: 1;
 }
 
 .avatar-frame img {
@@ -86,19 +131,23 @@
 }
 
 .user-profile-brief h4 {
-    font-size: 1.02rem;
+    font-size: 0.98rem;
     margin-bottom: 6px;
+    position: relative;
+    z-index: 1;
 }
 
 .user-profile-brief small {
     color: rgba(255, 255, 255, 0.78);
+    position: relative;
+    z-index: 1;
 }
 
 .side-nav {
-    padding: 12px;
+    padding: 10px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     flex: 1;
     min-height: 0;
 }
@@ -111,23 +160,46 @@
     color: #fff;
     text-decoration: none;
     text-align: left;
-    border-radius: 14px;
-    padding: 14px 16px;
+    border-radius: 13px;
+    padding: 12px 14px;
     font: inherit;
+    font-size: 0.92rem;
     display: flex;
     align-items: center;
     gap: 12px;
     cursor: pointer;
-    transition: transform 0.25s ease, background-color 0.25s ease, box-shadow 0.25s ease;
+    min-height: 46px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.25s ease, background-color 0.25s ease, box-shadow 0.25s ease, color 0.25s ease;
     box-sizing: border-box;
+}
+
+.nav-item i,
+.logout-btn i {
+    width: 18px;
+    text-align: center;
+    color: #9ee0a8;
 }
 
 .nav-item:hover,
 .nav-item.active,
 .logout-btn:hover {
-    background: rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.15);
     transform: translateX(4px);
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+}
+
+.nav-item.active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 10px;
+    bottom: 10px;
+    width: 4px;
+    border-radius: 999px;
+    background: #ecfdf0;
+    box-shadow: 0 0 18px rgba(158, 224, 168, 0.7);
 }
 
 .disabled-link {
@@ -137,19 +209,41 @@
 
 .logout-btn {
     margin-top: auto;
+    background: #cc0000;
+    justify-content: center;
+    font-weight: 700;
+    box-shadow: 0 12px 24px rgba(204, 0, 0, 0.22);
+}
+
+.logout-btn i {
+    color: #fff;
+}
+
+.logout-btn:hover {
+    background: #a90000;
 }
 
 .main-content {
     flex: 1;
     min-width: 0;
-    padding: 28px;
+    padding: 24px;
+    height: 100vh;
+    overflow-y: auto;
+    scroll-behavior: smooth;
 }
 
 .top-bar {
+    position: sticky;
+    top: 0;
+    z-index: 12;
     display: flex;
     align-items: center;
     gap: 16px;
-    margin-bottom: 24px;
+    margin: -24px -24px 22px;
+    padding: 18px 24px;
+    background: rgba(242, 246, 242, 0.82);
+    border-bottom: 1px solid rgba(0, 43, 5, 0.07);
+    backdrop-filter: blur(18px);
 }
 
 .menu-toggle-btn {
@@ -157,11 +251,12 @@
     width: 48px;
     height: 48px;
     border: 0;
-    border-radius: 14px;
-    background: #002b05;
+    border-radius: 13px;
+    background: linear-gradient(135deg, #002b05, #0d7a28);
     color: #fff;
     font-size: 1.1rem;
-    box-shadow: 0 14px 26px rgba(0, 43, 5, 0.22);
+    box-shadow: 0 14px 26px rgba(0, 43, 5, 0.24);
+    cursor: pointer;
 }
 
 .welcome-text h1,
@@ -171,7 +266,8 @@
 
 .welcome-text h1 {
     color: #002b05;
-    font-size: clamp(1.6rem, 2.8vw, 2.4rem);
+    font-size: clamp(1.35rem, 2.5vw, 2.15rem);
+    letter-spacing: 0;
 }
 
 .welcome-text p {
@@ -181,7 +277,8 @@
 
 .content-wrap {
     display: grid;
-    gap: 22px;
+    gap: 18px;
+    animation: content-rise 0.55s ease both;
 }
 
 .profile-data-grid {
@@ -198,11 +295,33 @@
     background: rgba(255, 255, 255, 0.92);
     border: 1px solid rgba(0, 43, 5, 0.08);
     box-shadow: 0 18px 36px rgba(13, 42, 18, 0.08);
+    backdrop-filter: blur(16px);
 }
 
 .data-card {
-    border-radius: 22px;
-    padding: 24px;
+    border-radius: 20px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
+}
+
+.data-card::after {
+    content: "";
+    position: absolute;
+    inset: auto 18px 0;
+    height: 4px;
+    border-radius: 999px 999px 0 0;
+    background: linear-gradient(90deg, #0d7a28, #cc0000, #f2c94c);
+    opacity: 0.76;
+}
+
+.data-card:hover,
+.course-card:hover,
+.earned-badge:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 24px 42px rgba(13, 42, 18, 0.13);
+    border-color: rgba(0, 43, 5, 0.16);
 }
 
 .data-card label {
@@ -210,8 +329,8 @@
     align-items: center;
     gap: 10px;
     color: #55735b;
-    font-size: 0.92rem;
-    margin-bottom: 16px;
+    font-size: 0.84rem;
+    margin-bottom: 14px;
 }
 
 .data-card h3,
@@ -221,8 +340,9 @@
 
 .data-card h3 {
     color: #002b05;
-    font-size: 1.18rem;
+    font-size: 1.04rem;
     margin-bottom: 6px;
+    overflow-wrap: anywhere;
 }
 
 .data-card p {
@@ -231,8 +351,8 @@
 
 .full-details-section,
 .lms-header-card {
-    border-radius: 24px;
-    padding: 26px;
+    border-radius: 22px;
+    padding: 22px;
 }
 
 .section-title {
@@ -252,9 +372,15 @@
     flex-direction: column;
     gap: 8px;
     padding: 16px 18px;
-    border-radius: 18px;
+    border-radius: 16px;
     background: linear-gradient(180deg, #ffffff, #f8fbf8);
     border: 1px solid rgba(0, 43, 5, 0.06);
+    transition: transform 0.24s ease, border-color 0.24s ease;
+}
+
+.detail-item:hover {
+    transform: translateY(-2px);
+    border-color: rgba(0, 43, 5, 0.14);
 }
 
 .detail-item .label {
@@ -278,9 +404,10 @@
 }
 
 .stat {
-    padding: 18px;
-    border-radius: 18px;
-    background: linear-gradient(180deg, #f7fbf7, #edf5ee);
+    padding: 16px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #f7fbf7, #edf5ee);
+    border: 1px solid rgba(0, 43, 5, 0.06);
 }
 
 .stat small {
@@ -314,11 +441,12 @@
     align-items: center;
     gap: 14px;
     padding: 16px;
-    border-radius: 20px;
+    border-radius: 18px;
     background: linear-gradient(180deg, #ffffff, #f5faf5);
     border: 1px solid rgba(0, 43, 5, 0.08);
     overflow: hidden;
     box-shadow: 0 14px 28px rgba(13, 42, 18, 0.08);
+    transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
 }
 
 .earned-badge::after {
@@ -407,8 +535,9 @@
 }
 
 .course-card {
-    border-radius: 22px;
-    padding: 22px;
+    border-radius: 20px;
+    padding: 20px;
+    transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
 }
 
 .course-card.locked {
@@ -416,9 +545,9 @@
 }
 
 .badge-preview {
-    width: 74px;
-    height: 74px;
-    border-radius: 20px;
+    width: 68px;
+    height: 68px;
+    border-radius: 18px;
     overflow: hidden;
     background: #eff5ef;
     margin-bottom: 16px;
@@ -438,7 +567,27 @@
 .course-card p {
     color: #5f6d61;
     line-height: 1.65;
-    min-height: 72px;
+    min-height: 64px;
+}
+
+@keyframes sidebar-sheen {
+    0%, 44% {
+        transform: rotate(-10deg) translateX(-55%);
+    }
+    72%, 100% {
+        transform: rotate(-10deg) translateX(85%);
+    }
+}
+
+@keyframes content-rise {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes badge-line {
@@ -580,12 +729,12 @@
         inset: 0;
         border: 0;
         padding: 0;
-        background: rgba(4, 24, 8, 0.42);
-        backdrop-filter: blur(4px);
+        background: rgba(4, 24, 8, 0.5);
         opacity: 0;
         pointer-events: none;
+        touch-action: none;
         transition: opacity 0.25s ease;
-        z-index: 20;
+        z-index: 70;
     }
 
     .sidebar-backdrop.active {
@@ -601,9 +750,13 @@
     .sidebar {
         position: fixed;
         left: 0;
+        top: 0;
         transform: translateX(-100%);
-        z-index: 30;
+        z-index: 90;
         padding-bottom: 18px;
+        width: min(310px, 86vw);
+        height: 100dvh;
+        max-height: 100dvh;
     }
 
     .sidebar.active {
@@ -611,14 +764,31 @@
     }
 
     .main-content {
-        padding: 20px;
+        padding: 18px;
         width: 100%;
+        height: auto;
+        min-height: 100vh;
+    }
+
+    .top-bar {
+        margin: -18px -18px 18px;
+        padding: 14px 18px;
     }
 
     .menu-toggle-btn {
         display: inline-flex;
         align-items: center;
         justify-content: center;
+    }
+
+    .side-nav {
+        flex: 0 0 auto;
+        min-height: auto;
+    }
+
+    .logout-btn {
+        margin-top: 8px;
+        flex-shrink: 0;
     }
 }
 
@@ -639,10 +809,57 @@
     .data-card,
     .course-card,
     .modal-card {
-        padding: 20px;
+        padding: 16px;
     }
 
     .badge-row {
         grid-template-columns: 1fr;
+    }
+
+    .profile-data-grid,
+    .course-grid {
+        gap: 14px;
+    }
+
+    .welcome-text p {
+        font-size: 0.86rem;
+        overflow-wrap: anywhere;
+    }
+
+    .modal-overlay {
+        align-items: flex-start;
+        overflow-y: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .menu-toggle-btn {
+        width: 44px;
+        height: 44px;
+        flex: 0 0 44px;
+    }
+
+    .top-bar {
+        align-items: flex-start;
+    }
+
+    .details-list,
+    .header-stats {
+        gap: 12px;
+    }
+
+    .detail-item {
+        padding: 14px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
     }
 }

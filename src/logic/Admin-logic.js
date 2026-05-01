@@ -35,6 +35,19 @@ let adminState = "";
 let adminProfile = {};
 let currentTransferOfficer = null;
 
+async function postScriptAction(payload) {
+    const response = await fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+    });
+    const result = await response.json();
+    if (result.status !== "success") {
+        throw new Error(result.message || "Registry update failed.");
+    }
+    return result;
+}
+
 function closeAdminSidebar() {
     document.querySelector('.cmd-sidebar')?.classList.remove('active');
     document.getElementById('adminSidebarBackdrop')?.classList.remove('active');
@@ -588,6 +601,13 @@ async function submitPersonnelUpdate(e) {
         postHeld: document.getElementById('editPost')?.value || '',
         department: document.getElementById('editDept')?.value || ''
     };
+    const sheetPayload = {
+        action: "updateOfficerProfile",
+        uniqueID: officer["Unique ID"] || "",
+        serviceNumber: officer["Service Number"] || "",
+        postHeld: payload.postHeld,
+        department: payload.department
+    };
 
     try {
         const qRef = query(collection(db, "users"), where("uniqueID", "==", uid));
@@ -596,9 +616,11 @@ async function submitPersonnelUpdate(e) {
 
         if (adminRole === 'super' || adminRole === 'national') {
             await setDoc(doc(db, "users", docId), { ...payload, rank: newRank }, { merge: true });
+            await postScriptAction({ ...sheetPayload, rank: newRank });
             alert("Record updated.");
         } else {
             await setDoc(doc(db, "users", docId), payload, { merge: true });
+            await postScriptAction(sheetPayload);
             if (newRank && newRank !== officer["Rank"]) {
                 await addDoc(collection(db, "promotion_queue"), {
                     fullName: `${officer["Surname"] || ''} ${officer["First Name"] || ''}`.trim(),
@@ -737,6 +759,7 @@ window.approvePromotion = async (queueId, officerID, newRank) => {
     const snap = await getDocs(qRef);
     const docId = snap.empty ? officerID : snap.docs[0].id;
     await setDoc(doc(db, "users", docId), { uniqueID: officerID, rank: newRank }, { merge: true });
+    await postScriptAction({ action: "updateOfficerProfile", uniqueID: officerID, rank: newRank });
     await deleteDoc(doc(db, "promotion_queue", queueId));
     await Promise.all([loadPromotions(), fetchRegistry()]);
 };
@@ -816,7 +839,7 @@ window.executeTransfer = async () => {
         const result = await res.json();
 
         if (result.status === "success") {
-            await updateTransferredOfficerLocation(sn, newState, newArea);
+            await updateTransferredOfficerLocation(sn, newState, newArea, result.pdfUrl || "");
             alert("Command transfer successful. Location details updated without changing service number or unique ID.");
             currentTransferOfficer = null;
             await refreshAll();
@@ -829,7 +852,7 @@ window.executeTransfer = async () => {
     }
 };
 
-async function updateTransferredOfficerLocation(serviceNumber, stateCommand, areaCommand) {
+async function updateTransferredOfficerLocation(serviceNumber, stateCommand, areaCommand, pdfUrl = "") {
     const officer = currentTransferOfficer || allOfficers.find((item) => (item["Service Number"] || "").trim() === serviceNumber);
     const uniqueId = officer?.["Unique ID"] || officer?.uniqueID || "";
 
@@ -844,6 +867,10 @@ async function updateTransferredOfficerLocation(serviceNumber, stateCommand, are
         "Area Command": areaCommand,
         updatedAt: serverTimestamp()
     };
+    if (pdfUrl) {
+        updates.pdfUrl = pdfUrl;
+        updates["PDF URL"] = pdfUrl;
+    }
 
     let updated = false;
 

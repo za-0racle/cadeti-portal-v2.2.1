@@ -18,7 +18,9 @@ export const db = getFirestore(app);
 export const storage = getStorage(app);
 
 // THE URL YOU PROVIDED
-export const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxbg_Dh_jrLwjCKftcGO7caO75RJrJN51GT8jUkfhP87AVvm6VheJAkt7L_oe2PeYCOpA/exec";
+export const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzLaa4O4qEI0mkKyoe7YoTGVCxEGkcDv7IYPFpj2QXb9Dh6uqO2_teLD0tpnM-S0fIPjA/exec";
+export const FORMSPREE_FORM_ID = "xpqbzgoj";
+export const FORMSPREE_ENDPOINT = `https://formspree.io/f/${FORMSPREE_FORM_ID}`;
 
 export const getShadowEmail = (serviceNum) => {
     const cleanNum = serviceNum.replace(/\//g, "").toLowerCase().trim();

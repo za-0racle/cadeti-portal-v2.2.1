@@ -261,12 +261,20 @@ async function handleFormSubmission(e) {
     }
 
     try {
-        await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(formData) });
+        const response = await fetch(SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(formData)
+        });
+        const result = await response.json();
+        if (result.status !== "success") {
+            throw new Error(result.message || "Submission failed.");
+        }
         alert("Submission Successful! Documents sent to your email.");
         document.getElementById('successMessage').style.display = "block";
         e.target.reset();
         window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch (err) { alert("Submission failed."); submitBtn.disabled = false; }
+    } catch (err) { alert(err.message || "Submission failed."); submitBtn.disabled = false; }
     finally { submitBtn.classList.remove("loading"); }
 }
 

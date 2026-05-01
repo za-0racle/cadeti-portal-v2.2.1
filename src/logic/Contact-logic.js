@@ -1,20 +1,49 @@
-import { db, SCRIPT_URL } from '../config.js';
+import { db, FORMSPREE_ENDPOINT } from '../config.js';
 import { addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const HQ_EMAIL = "cadetinitiative1@gmail.com";
 
 async function sendInquiryEmail(payload) {
-    await fetch(SCRIPT_URL, {
+    const response = await fetch(FORMSPREE_ENDPOINT, {
         method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        },
         body: JSON.stringify({
-            action: "sendInquiry",
-            type: "contact",
-            to: HQ_EMAIL,
-            ...payload
+            name: payload.name,
+            email: payload.email,
+            subject: payload.subject,
+            message: payload.message,
+            _subject: `CADETI Web Inquiry: ${payload.subject}`,
+            source: "CADETI Contact Page",
+            submittedAt: payload.timestamp
         })
     });
+
+    if (!response.ok) {
+        let message = "Inquiry email could not be sent.";
+        try {
+            const result = await response.json();
+            message = result?.errors?.[0]?.message || result?.error || message;
+        } catch (error) {
+            // Keep the friendly fallback message when Formspree returns non-JSON.
+        }
+        throw new Error(message);
+    }
+}
+
+async function archiveInquiry(payload) {
+    try {
+        await addDoc(collection(db, "contact_messages"), {
+            ...payload,
+            to: HQ_EMAIL,
+            status: "submitted",
+            createdAt: serverTimestamp()
+        });
+    } catch (error) {
+        console.warn("Contact message was emailed, but Firestore archive failed:", error);
+    }
 }
 
 export function initContactPage() {
@@ -56,14 +85,8 @@ export function initContactPage() {
             };
 
             try {
-                await addDoc(collection(db, "contact_messages"), {
-                    ...formData,
-                    to: HQ_EMAIL,
-                    status: "submitted",
-                    createdAt: serverTimestamp()
-                });
-
                 await sendInquiryEmail(formData);
+                archiveInquiry(formData);
 
                 statusBox.style.display = 'block';
                 statusBox.style.background = '#dcfce7';
