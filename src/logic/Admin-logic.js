@@ -1,6 +1,5 @@
-import { db, auth, SCRIPT_URL, storage } from '../config.js';
+import { db, auth, SCRIPT_URL } from '../config.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getDownloadURL, ref, uploadBytes } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 import {
     addDoc,
     collection,
@@ -48,6 +47,50 @@ async function postScriptAction(payload) {
         throw new Error(result.message || "Registry update failed.");
     }
     return result;
+}
+
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(reader.error || new Error("Unable to read badge image."));
+        reader.readAsDataURL(file);
+    });
+}
+
+async function uploadCourseBadge(file) {
+    const dataUrl = await fileToBase64(file);
+    const [, base64 = ""] = dataUrl.split(',');
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 45000);
+
+    try {
+        const response = await fetch(SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            signal: controller.signal,
+            body: JSON.stringify({
+                action: "uploadMedia",
+                base64,
+                mimeType: file.type,
+                fileName: `course-badge-${Date.now()}-${file.name}`
+            })
+        });
+
+        const result = await response.json();
+        if (result.status !== "success" || !result.url) {
+            throw new Error(result.message || "Badge upload failed.");
+        }
+
+        return result.url;
+    } catch (error) {
+        if (error.name === "AbortError") {
+            throw new Error("Badge upload timed out. Please try a smaller image or check your connection.");
+        }
+        throw error;
+    } finally {
+        clearTimeout(timeout);
+    }
 }
 
 function closeAdminSidebar() {
@@ -710,11 +753,7 @@ async function submitCourse(e) {
             if (file) {
                 if (!file.type.startsWith('image/')) throw new Error("Badge upload must be an image file.");
                 if (file.size > 5242880) throw new Error("Badge image must be 5MB or smaller.");
-
-                const safeName = file.name.replace(/[^a-z0-9.-]/gi, '_').toLowerCase();
-                const badgeRef = ref(storage, `course-badges/${Date.now()}-${safeName}`);
-                await uploadBytes(badgeRef, file);
-                payload.badgeUrl = await getDownloadURL(badgeRef);
+                payload.badgeUrl = await uploadCourseBadge(file);
             } else {
                 payload.badgeUrl = allCourses.find((course) => course.id === courseId)?.badgeUrl || '';
             }
