@@ -1,0 +1,399 @@
+.modal-overlay.id-card-modal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    z-index: 5000;
+    overflow-y: auto;
+}
+
+.modal-card.id-card-preview-container {
+    width: min(760px, 96vw);
+    max-width: min(760px, 96vw);
+    max-height: 94vh;
+    padding: 0;
+    border-radius: 20px;
+    overflow-y: auto;
+}
+
+.card-display-flex {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 18px;
+    flex-wrap: wrap;
+    padding: 18px;
+    background: #f4f7f6;
+}
+
+.id-card-preview-container .modal-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.id-card-preview-container .modal-header button {
+    border: 0;
+    background: transparent;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+    color: #333;
+}
+
+.id-card-preview-container .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 14px 18px 18px;
+    background: #fff;
+}
+
+.id-card-wrap {
+    width: 323px; /* 85.6mm equivalent */
+    height: 504px; /* 53.98mm equivalent - Rotated for vertical design as per your sample */
+    background: white;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+/* Front Side Specifics */
+.id-front-bg {
+    height: 100%;
+    border: 8px solid #078f3b;
+    border-top-width: 5px;
+    border-bottom-width: 5px;
+    padding: 12px 14px 10px;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(#e0271e 0 5px, transparent 5px calc(100% - 5px), #e0271e calc(100% - 5px)),
+        #ffffff;
+    position: relative;
+}
+
+.id-watermark {
+    position: absolute;
+    width: 355px;
+    height: 355px;
+    object-fit: contain;
+    top: 74px;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0.045;
+    pointer-events: none;
+}
+
+.id-header {
+    text-align: center;
+    position: relative;
+    z-index: 1;
+}
+
+.logos {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    margin-top: 6px;
+}
+
+.logo-main {
+    width: 44px;
+    height: 44px;
+    object-fit: contain;
+    border-radius: 999px;
+}
+
+.coat-arms {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+}
+
+.org-title {
+    color: #078f3b;
+    text-shadow: 0 1px 1px rgba(0,0,0,0.18);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 9px;
+    font-weight: 800;
+    line-height: 1.16;
+    margin: 8px 0 3px;
+}
+
+.org-acronym {
+    color: #d62319;
+    text-shadow: 0 1px 1px rgba(0,0,0,0.15);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    margin: 0 0 4px;
+}
+
+.id-header .motto {
+    color: #111;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 7.5px;
+    font-style: italic;
+    font-weight: 700;
+    margin: 0;
+}
+
+.title-banner {
+    background: #078f3b;
+    color: white;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 5px;
+    text-align: center;
+    margin: 8px 14px 10px;
+    letter-spacing: 5px;
+    position: relative;
+    z-index: 1;
+}
+
+.photo-area {
+    position: relative;
+    z-index: 1;
+}
+
+.photo-box {
+    width: 110px;
+    height: 146px;
+    border: 1px solid #c4c4c4;
+    margin: 0 auto 10px;
+    overflow: hidden;
+    background: #f5f5f5;
+}
+
+.photo-box.is-empty {
+    background: transparent;
+    border-color: transparent;
+}
+
+.passport-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.id-details {
+    padding: 0 4px 0 0;
+    position: relative;
+    z-index: 1;
+}
+
+.id-details .field {
+    display: grid;
+    grid-template-columns: 98px minmax(0, 1fr);
+    gap: 8px;
+    align-items: start;
+    min-height: 19px;
+    margin-bottom: 5px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10.5px;
+    line-height: 1.18;
+}
+
+.id-details .lbl {
+    font-weight: 800;
+    color: #000;
+    text-align: left;
+}
+
+.id-details .val {
+    color: #078f3b;
+    font-weight: 800;
+    overflow-wrap: anywhere;
+}
+
+.qr-area {
+    position: absolute;
+    right: 13px;
+    bottom: 48px;
+    width: 42px;
+    height: 42px;
+    z-index: 2;
+}
+
+.qr-code {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.signature-area {
+    position: absolute;
+    bottom: 12px;
+    left: 46px;
+    right: 46px;
+    text-align: center;
+    z-index: 2;
+}
+
+.holder-signature-slot {
+    height: 28px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.holder-signature-slot.is-empty {
+    height: 22px;
+}
+
+.holder-sign {
+    max-width: 100%;
+    max-height: 28px;
+    object-fit: contain;
+    mix-blend-mode: multiply;
+}
+
+.sign-line { width: 70%; height: 1.5px; background: black; margin: 0 auto; }
+.signature-area .sign-line {
+    width: 100%;
+}
+
+.signature-area label {
+    color: #078f3b;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 8.5px;
+    font-weight: 800;
+}
+
+/* Back Side Specifics */
+.id-back-bg {
+    height: 100%;
+    border: 9px solid #078f3b;
+    padding: 28px 25px 18px;
+    text-align: center;
+    position: relative;
+    background: #ffffff;
+}
+
+.back-header {
+    height: 43px;
+    background: #078f3b;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 0 14px 0 8px;
+    margin: 4px auto 24px;
+    width: 92%;
+}
+
+.back-logo {
+    width: 39px;
+    height: 39px;
+    object-fit: contain;
+    border-radius: 999px;
+    background: #fff;
+}
+
+.back-header h2 {
+    margin: 0;
+    color: #fff;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 25px;
+    font-weight: 800;
+    letter-spacing: 7px;
+}
+
+.back-content {
+    position: relative;
+    z-index: 1;
+}
+
+.property-text {
+    color: #d62319;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13.5px;
+    line-height: 1.35;
+    margin: 0 0 24px;
+    text-align: left;
+}
+
+.legal-text {
+    color: #111;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.36;
+    margin: 0 0 22px;
+    text-align: left;
+}
+
+.expiry-row {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 12px;
+    font-weight: 800;
+    margin: 4px 0 14px;
+}
+
+.auth-sign-block {
+    margin: 0 auto 10px;
+    width: 76%;
+}
+
+.auth-signature-slot {
+    height: 45px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.auth-signature-slot.is-empty {
+    height: 34px;
+}
+
+.auth-sign-img {
+    max-width: 100%;
+    max-height: 45px;
+    object-fit: contain;
+    mix-blend-mode: multiply;
+}
+
+.auth-sign-block .sign-line {
+    width: 100%;
+    height: 1.5px;
+}
+
+.auth-sign-block label {
+    color: #000;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 9px;
+    font-weight: 800;
+}
+
+.barcode-area {
+    position: absolute;
+    bottom: 18px;
+    left: 40px;
+    right: 40px;
+}
+
+.barcode-area svg {
+    width: 100%;
+    height: 46px;
+}
+
+@media (max-width: 480px) {
+    .id-card-modal {
+        padding: 10px;
+    }
+
+    .card-display-flex {
+        padding: 12px;
+    }
+
+    .id-card-wrap {
+        transform: scale(0.88);
+        transform-origin: top center;
+        margin-bottom: -60px;
+    }
+}

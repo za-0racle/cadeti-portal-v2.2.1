@@ -14,6 +14,7 @@ import {
     where
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { setupAdminPasswordModal } from './AdminPassword.js';
+import { generateIDCard as generateFormattedIDCard } from './ID-generator.js';
 import { getAdminAssignedState, getAdminDisplayName, getAdminRole } from '../utils/adminProfile.js';
 
 const RANK_LIST = [
@@ -35,6 +36,7 @@ let adminState = "";
 let adminProfile = {};
 let currentTransferOfficer = null;
 let allCourses = [];
+let filteredRegistry = null;
 
 async function postScriptAction(payload) {
     const response = await fetch(SCRIPT_URL, {
@@ -140,6 +142,32 @@ function createAdminImageMarkup(url, alt, className = '') {
     `;
 }
 
+function escapeInline(value) {
+    return String(value || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, ' ');
+}
+
+function getOfficerName(officer = {}) {
+    return [officer["Surname"], officer["First Name"], officer["Middle Name"]].filter(Boolean).join(' ').trim()
+        || officer.fullName
+        || 'Unknown Officer';
+}
+
+function getOfficerPassport(officer = {}) {
+    return officer["Passport URL"] || officer.passportUrl || officer.photoUrl || officer.photo || officer.passport || '';
+}
+
+function getOfficerSignature(officer = {}) {
+    return officer["Signature URL"] || officer.signatureUrl || officer.signature || '';
+}
+
+function getAuthoritySignature(admin = {}) {
+    return admin.authorisedSignatureUrl
+        || admin.authorizedSignatureUrl
+        || admin.nationalAdjutantSignatureUrl
+        || admin["Authorised Signature URL"]
+        || '';
+}
+
 function wireAdminImages(root = document) {
     root.querySelectorAll('.admin-managed-image').forEach((image) => {
         if (image.dataset.imageBound === 'true') return;
@@ -229,6 +257,10 @@ function bindAdminUI() {
     const closeModalBtn = document.querySelector('.close-modal');
     const transferModal = document.getElementById('transferModal');
     const adminSearch = document.getElementById('adminSearch');
+    const idCardSearch = document.getElementById('idCardSearch');
+    const idCardStateFilter = document.getElementById('idCardStateFilter');
+    const idCardDeptFilter = document.getElementById('idCardDeptFilter');
+    const idCardRankFilter = document.getElementById('idCardRankFilter');
     const filterState = document.getElementById('filterState');
     const filterDept = document.getElementById('filterDept');
     const filterRank = document.getElementById('filterRank');
@@ -256,6 +288,10 @@ function bindAdminUI() {
     [adminSearch, filterState, filterDept, filterRank].forEach((el) => {
         if (el) el.addEventListener('input', applyFilters);
         if (el && el.tagName === 'SELECT') el.addEventListener('change', applyFilters);
+    });
+    [idCardSearch, idCardStateFilter, idCardDeptFilter, idCardRankFilter].forEach((el) => {
+        if (el) el.addEventListener('input', renderIdCardCenter);
+        if (el && el.tagName === 'SELECT') el.addEventListener('change', renderIdCardCenter);
     });
 
     if (exportBtn) exportBtn.addEventListener('click', exportRegistryCsv);
@@ -363,6 +399,7 @@ function hydrateAdminShell(adminData, user) {
                     <button class="nav-btn active" type="button" data-section="registry"><i class="fa-solid fa-database"></i><span>Registry</span></button>
                     <button class="nav-btn" type="button" data-section="promotions"><i class="fa-solid fa-award"></i><span>Promotions</span></button>
                     <button class="nav-btn" type="button" data-section="enrollments"><i class="fa-solid fa-graduation-cap"></i><span>Applications</span></button>
+                    <button class="nav-btn" type="button" data-section="idcards"><i class="fa-solid fa-id-card"></i><span>ID Cards</span></button>
                     <button class="nav-btn" type="button" data-section="graduation"><i class="fa-solid fa-file-signature"></i><span>Graduation</span></button>
                     <button class="nav-btn" type="button" data-section="resets"><i class="fa-solid fa-key"></i><span>Security Hub</span></button>
                     <div class="nav-group" id="superAdminTools" style="display: ${showSuper ? 'block' : 'none'};">
@@ -413,6 +450,10 @@ async function fetchRegistry() {
     if (tbody) {
         tbody.innerHTML = '<tr><td colspan="7" class="text-center">Syncing Registry...</td></tr>';
     }
+    const recruitTbody = document.getElementById('recruitTableBody');
+    if (recruitTbody) {
+        recruitTbody.innerHTML = '<tr><td colspan="7" class="text-center">Syncing Registry...</td></tr>';
+    }
 
     try {
         const res = await fetch(`${SCRIPT_URL}?action=getAdminData`);
@@ -424,23 +465,49 @@ async function fetchRegistry() {
         }
 
         allOfficers = data;
+        filteredRegistry = data;
         populateFilters(allOfficers);
-        renderTable(allOfficers);
+        renderRegistryTables(allOfficers);
+        renderIdCardCenter();
         updateKpis(allOfficers);
     } catch (error) {
         console.error('Registry load failed:', error);
         if (tbody) {
             tbody.innerHTML = '<tr><td colspan="7" class="text-center">Connection error while loading registry.</td></tr>';
         }
+        if (recruitTbody) {
+            recruitTbody.innerHTML = '<tr><td colspan="7" class="text-center">Connection error while loading registry.</td></tr>';
+        }
     }
 }
 
-function renderTable(data) {
-    const tbody = document.getElementById('adminTableBody');
+function isRecruitRecord(officer = {}) {
+    const category = String(officer["Member Category"] || officer["Registration Type"] || '').trim().toLowerCase();
+    const id = String(officer["Unique ID"] || officer["Service Number"] || '');
+    return category === 'recruit' || id.startsWith('REC/');
+}
+
+function setRegistryCount(id, count) {
+    const node = document.getElementById(id);
+    if (node) node.textContent = `${count} ${count === 1 ? 'record' : 'records'}`;
+}
+
+function renderRegistryTables(data) {
+    const recruits = data.filter(isRecruitRecord);
+    const members = data.filter((officer) => !isRecruitRecord(officer));
+
+    renderTable(members, 'adminTableBody', 'member');
+    renderTable(recruits, 'recruitTableBody', 'recruit');
+    setRegistryCount('memberTableCount', members.length);
+    setRegistryCount('recruitTableCount', recruits.length);
+}
+
+function renderTable(data, tbodyId = 'adminTableBody', tableType = 'member') {
+    const tbody = document.getElementById(tbodyId);
     if (!tbody) return;
 
     if (!data.length) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center">No officers found.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center">No ${tableType === 'recruit' ? 'recruits' : 'members'} found.</td></tr>`;
         return;
     }
 
@@ -451,17 +518,21 @@ function renderTable(data) {
         const safeServiceNumber = String(serviceNumber).replace(/'/g, "\\'");
         const name = `${o["Surname"] || ''}, ${o["First Name"] || ''}`.replace(/^,\s*/, '');
         const timestamp = o["Timestamp"] ? String(o["Timestamp"]).split('T')[0] : 'N/A';
+        const isRecruit = tableType === 'recruit';
+        const statusLabel = isRecruit ? (o["Registration Type"] || o["Status"] || 'Recruit') : (o["Rank"] || 'N/A');
+        const statusClass = isRecruit ? 'badge-gold' : ((o["Rank"] || '').toLowerCase().includes('commander') ? 'badge-red' : 'badge-green');
         return `
             <tr>
                 <td>${timestamp}</td>
                 <td><code>${uniqueId}</code></td>
                 <td><strong>${name}</strong></td>
-                <td><span class="rank-badge ${(o["Rank"] || '').toLowerCase().includes('commander') ? 'badge-red' : 'badge-green'}">${o["Rank"] || 'N/A'}</span></td>
+                <td><span class="rank-badge ${statusClass}">${statusLabel}</span></td>
                 <td>${o["Department"] || 'N/A'}</td>
                 <td>${o["State Command"] || 'N/A'}</td>
                 <td>
                     <div class="row-actions">
-                        <button class="action-icon" type="button" title="Edit officer" onclick="window.openEditModal('${safeUniqueId}')"><i class="fa-solid fa-user-pen"></i></button>
+                        ${isRecruit ? '' : `<button class="action-icon" type="button" title="Edit officer" onclick="window.openEditModal('${safeUniqueId}')"><i class="fa-solid fa-user-pen"></i></button>`}
+                        ${isRecruit ? '' : `<button class="action-icon" type="button" title="Generate ID card" onclick="window.generateIDCardById('${safeUniqueId}')"><i class="fa-solid fa-id-card"></i></button>`}
                         ${o["PDF URL"] ? `<a href="${o["PDF URL"]}" target="_blank" class="pdf-btn">PDF</a>` : `<button class="action-icon" type="button" title="View officer" onclick="window.viewOfficer('${safeUniqueId}')"><i class="fa-solid fa-eye"></i></button>`}
                         <button class="action-icon danger-icon" type="button" title="Delete officer" onclick="window.deleteOfficerRecord('${safeUniqueId}', '${safeServiceNumber}')"><i class="fa-solid fa-trash"></i></button>
                     </div>
@@ -475,6 +546,9 @@ function populateFilters(data) {
     populateSelect('filterState', [...new Set(data.map((o) => o["State Command"]).filter(Boolean))].sort(), 'States', adminRole === 'state' ? adminState : '');
     populateSelect('filterDept', [...new Set(data.map((o) => o["Department"]).filter(Boolean))].sort(), 'Departments');
     populateSelect('filterRank', RANK_LIST, 'Ranks');
+    populateSelect('idCardStateFilter', [...new Set(data.map((o) => o["State Command"]).filter(Boolean))].sort(), 'States', adminRole === 'state' ? adminState : '');
+    populateSelect('idCardDeptFilter', [...new Set(data.map((o) => o["Department"]).filter(Boolean))].sort(), 'Departments');
+    populateSelect('idCardRankFilter', RANK_LIST, 'Ranks');
     populateSelect('newAdminState', [...new Set(data.map((o) => o["State Command"]).filter(Boolean))].sort(), 'Select State');
     populateSelect('targetState', [...new Set(data.map((o) => o["State Command"]).filter(Boolean))].sort(), 'Select State');
     populateTargetAreas(document.getElementById('targetState')?.value || '');
@@ -536,7 +610,9 @@ function applyFilters() {
             && (!selectedRank || officer["Rank"] === selectedRank);
     });
 
-    renderTable(filtered);
+    filteredRegistry = filtered;
+    renderRegistryTables(filtered);
+    renderIdCardCenter();
     updateKpis(filtered);
 }
 
@@ -566,7 +642,12 @@ async function loadResetTickets() {
                     <td><code>${t.serviceNumber || 'N/A'}</code></td>
                     <td><small>${t.requestedAt?.toDate?.().toLocaleString?.() || 'N/A'}</small></td>
                     <td><span class="rank-badge badge-red">PENDING</span></td>
-                    <td><button class="cmd-btn-small" type="button" onclick="window.approveReset('${docSnap.id}', '${t.contactEmail || ''}', '${t.officerName || ''}', '${t.serviceNumber || ''}')">APPROVE & SEND</button></td>
+                    <td>
+                        <div class="row-actions">
+                            <button class="cmd-btn-small" type="button" onclick="window.approveReset('${docSnap.id}', '${escapeInline(t.contactEmail)}', '${escapeInline(t.officerName)}', '${escapeInline(t.serviceNumber)}')">APPROVE & SEND</button>
+                            <button class="cmd-btn-small danger-btn" type="button" onclick="window.declineReset('${docSnap.id}', '${escapeInline(t.officerName || t.serviceNumber)}')">DECLINE</button>
+                        </div>
+                    </td>
                 </tr>
             `);
         });
@@ -589,15 +670,22 @@ async function loadPromotions() {
         const rows = [];
         snap.forEach((docSnap) => {
             const p = docSnap.data();
+            const isDeclined = p.status === 'declined';
+            const actionCell = isDeclined
+                ? `<span class="rank-badge badge-red">DECLINED</span>`
+                : (adminRole === 'super' || adminRole === 'national')
+                    ? `<div class="row-actions">
+                        <button class="cmd-btn-small" type="button" onclick="window.approvePromotion('${docSnap.id}', '${escapeInline(p.uniqueID)}', '${escapeInline(p.proposedRank)}')">APPROVE</button>
+                        <button class="cmd-btn-small danger-btn" type="button" onclick="window.declinePromotion('${docSnap.id}', '${escapeInline(p.fullName || p.uniqueID)}')">DECLINE</button>
+                    </div>`
+                    : `<span class="rank-badge badge-red">PENDING HQ</span>`;
             rows.push(`
                 <tr>
                     <td><b>${p.fullName || 'Unknown'}</b></td>
                     <td>${p.currentRank || 'N/A'}</td>
-                    <td><span class="rank-badge badge-gold">${p.proposedRank || 'N/A'}</span></td>
+                    <td><span class="rank-badge ${isDeclined ? 'badge-red' : 'badge-gold'}">${p.proposedRank || 'N/A'}</span></td>
                     <td>${p.state || 'N/A'}</td>
-                    <td>${(adminRole === 'super' || adminRole === 'national')
-                        ? `<button class="cmd-btn-small" type="button" onclick="window.approvePromotion('${docSnap.id}', '${p.uniqueID}', '${p.proposedRank}')">APPROVE</button>`
-                        : `<span class="rank-badge badge-red">PENDING HQ</span>`}</td>
+                    <td>${actionCell}</td>
                 </tr>
             `);
         });
@@ -621,13 +709,23 @@ async function loadEnrollments() {
         snap.forEach((docSnap) => {
             const d = docSnap.data();
             const isDone = d.status === 'completed';
+            const isDeclined = d.status === 'declined';
+            const statusClass = isDone ? 'badge-green' : isDeclined ? 'badge-gold' : 'badge-red';
+            const actionCell = isDone
+                ? 'Awarded'
+                : isDeclined
+                    ? 'Declined'
+                    : `<div class="row-actions">
+                        <button class="cmd-btn-small" type="button" onclick="window.updateEnrollment('${docSnap.id}', 'completed')">APPROVE</button>
+                        <button class="cmd-btn-small danger-btn" type="button" onclick="window.updateEnrollment('${docSnap.id}', 'declined')">DECLINE</button>
+                    </div>`;
             rows.push(`
                 <tr>
                     <td><b>${d.fullName || 'Unknown'}</b></td>
                     <td>${d.courseTitle || 'N/A'}</td>
                     <td>${d.dateApplied?.toDate?.().toLocaleDateString?.() || 'N/A'}</td>
-                    <td><span class="rank-badge ${isDone ? 'badge-green' : 'badge-red'}">${d.status || 'pending'}</span></td>
-                    <td>${isDone ? 'Awarded' : `<button class="cmd-btn-small" type="button" onclick="window.updateEnrollment('${docSnap.id}', 'completed')">APPROVE</button>`}</td>
+                    <td><span class="rank-badge ${statusClass}">${d.status || 'pending'}</span></td>
+                    <td>${actionCell}</td>
                 </tr>
             `);
         });
@@ -718,6 +816,82 @@ async function loadCourseManager() {
     }
 }
 
+function getIdCardOfficerList() {
+    const base = Array.isArray(filteredRegistry) ? filteredRegistry : allOfficers;
+    const searchTerm = (document.getElementById('idCardSearch')?.value || '').trim().toLowerCase();
+    const selectedState = document.getElementById('idCardStateFilter')?.value || '';
+    const selectedDept = document.getElementById('idCardDeptFilter')?.value || '';
+    const selectedRank = document.getElementById('idCardRankFilter')?.value || '';
+
+    return base.filter((officer) => {
+        if (isRecruitRecord(officer)) return false;
+
+        const haystack = [
+            getOfficerName(officer),
+            officer["Service Number"],
+            officer["Unique ID"],
+            officer["Rank"],
+            officer["Department"],
+            officer["State Command"],
+            officer["Area Command"]
+        ].filter(Boolean).join(' ').toLowerCase();
+
+        return (!searchTerm || haystack.includes(searchTerm))
+            && (!selectedState || officer["State Command"] === selectedState)
+            && (!selectedDept || officer["Department"] === selectedDept)
+            && (!selectedRank || officer["Rank"] === selectedRank);
+    });
+}
+
+function renderIdCardCenter() {
+    const tbody = document.getElementById('idCardListBody');
+    const count = document.getElementById('idCardCount');
+    if (!tbody) return;
+
+    const officers = getIdCardOfficerList();
+    if (count) count.textContent = `${officers.length} ${officers.length === 1 ? 'card' : 'cards'}`;
+
+    if (!officers.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">No officers match these ID card filters.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = officers.map((officer) => {
+        const id = officer["Unique ID"] || officer["Service Number"] || '';
+        const serviceNumber = officer["Service Number"] || 'N/A';
+        const name = getOfficerName(officer);
+        return `
+            <tr>
+                <td><div class="cell-stack"><b>${name}</b><small>${officer["Email"] || officer.email || 'No email'}</small></div></td>
+                <td><code>${serviceNumber}</code></td>
+                <td><span class="rank-badge badge-green">${officer["Rank"] || 'Officer'}</span></td>
+                <td>${officer["Department"] || 'N/A'}</td>
+                <td>${officer["State Command"] || 'N/A'}</td>
+                <td><button class="cmd-btn-small" type="button" onclick="window.generateIDCardById('${escapeInline(id)}')"><i class="fa-solid fa-id-card"></i> ID CARD</button></td>
+            </tr>
+        `;
+    }).join('');
+}
+
+window.generateIDCard = generateFormattedIDCard;
+
+window.generateIDCardById = async (officerId) => {
+    const officer = allOfficers.find((item) => (item["Unique ID"] || item["Service Number"]) === officerId);
+    if (!officer) return alert("Officer record not found.");
+    try {
+        return await generateFormattedIDCard({
+            ...officer,
+            authoritySignatureUrl: getAuthoritySignature(adminProfile)
+        });
+    } catch (error) {
+        console.error('ID card preview failed:', error);
+        alert(error.message || "Unable to open ID card preview.");
+        return null;
+    }
+};
+
+window.downloadOfficerIdCard = window.generateIDCardById;
+
 function openModal(id) {
     const modal = document.getElementById(id);
     if (modal) modal.style.display = 'flex';
@@ -742,6 +916,23 @@ function closeTransferModal() {
     closeModal('transferModal');
 }
 
+async function getOfficerUserDocId(officer = {}, fallbackId = '') {
+    const uniqueID = officer["Unique ID"] || officer.uniqueID || '';
+    const serviceNumber = officer["Service Number"] || officer.serviceNumber || '';
+
+    if (uniqueID) {
+        const uniqueSnap = await getDocs(query(collection(db, "users"), where("uniqueID", "==", uniqueID)));
+        if (!uniqueSnap.empty) return uniqueSnap.docs[0].id;
+    }
+
+    if (serviceNumber) {
+        const serviceSnap = await getDocs(query(collection(db, "users"), where("serviceNumber", "==", serviceNumber)));
+        if (!serviceSnap.empty) return serviceSnap.docs[0].id;
+    }
+
+    return String(uniqueID || fallbackId || serviceNumber || `officer-${Date.now()}`).replace(/[\/#?]/g, '-');
+}
+
 async function submitPersonnelUpdate(e) {
     e.preventDefault();
     const uid = document.getElementById('editUid')?.value;
@@ -750,6 +941,12 @@ async function submitPersonnelUpdate(e) {
 
     const newRank = document.getElementById('editRank')?.value || '';
     const payload = {
+        phone: document.getElementById('editPhone')?.value || '',
+        email: document.getElementById('editEmail')?.value || '',
+        address: document.getElementById('editAddress')?.value || '',
+        nokName: document.getElementById('editNokName')?.value || '',
+        nokRelation: document.getElementById('editNokRelation')?.value || '',
+        nokPhone: document.getElementById('editNokPhone')?.value || '',
         postHeld: document.getElementById('editPost')?.value || '',
         department: document.getElementById('editDept')?.value || ''
     };
@@ -757,14 +954,18 @@ async function submitPersonnelUpdate(e) {
         action: "updateOfficerProfile",
         uniqueID: officer["Unique ID"] || "",
         serviceNumber: officer["Service Number"] || "",
+        phone: payload.phone,
+        email: payload.email,
+        address: payload.address,
+        nokName: payload.nokName,
+        nokRelation: payload.nokRelation,
+        nokPhone: payload.nokPhone,
         postHeld: payload.postHeld,
         department: payload.department
     };
 
     try {
-        const qRef = query(collection(db, "users"), where("uniqueID", "==", uid));
-        const snap = await getDocs(qRef);
-        const docId = snap.empty ? uid : snap.docs[0].id;
+        const docId = await getOfficerUserDocId(officer, uid);
 
         if (adminRole === 'super' || adminRole === 'national') {
             await setDoc(doc(db, "users", docId), { ...payload, rank: newRank }, { merge: true });
@@ -968,6 +1169,16 @@ window.openEditModal = (uid) => {
     if (!officer) return;
 
     document.getElementById('editUid').value = uid;
+    document.getElementById('editFullName').value = getOfficerName(officer);
+    document.getElementById('editServiceNumber').value = officer["Service Number"] || 'N/A';
+    document.getElementById('editUniqueId').value = officer["Unique ID"] || 'N/A';
+    document.getElementById('editCommand').value = [officer["State Command"], officer["Area Command"]].filter(Boolean).join(' / ') || 'N/A';
+    document.getElementById('editPhone').value = officer["Phone Number"] || officer.phone || '';
+    document.getElementById('editEmail').value = officer["Email"] || officer.email || '';
+    document.getElementById('editAddress').value = officer["Residential Address"] || officer.address || '';
+    document.getElementById('editNokName').value = officer["NOK Full Name"] || officer.nokName || '';
+    document.getElementById('editNokRelation').value = officer["NOK Relationship"] || officer["NOK relationship"] || officer.nokRelation || '';
+    document.getElementById('editNokPhone').value = officer["NOK Phone Number"] || officer.nokPhone || '';
     document.getElementById('editPost').value = officer["Post Held"] || '';
     populateSelect('editDept', DEPT_LIST, 'Select Department');
     document.getElementById('editDept').value = officer["Department"] || DEPT_LIST[DEPT_LIST.length - 1];
@@ -1042,8 +1253,23 @@ window.deleteOfficerRecord = async (uniqueId, serviceNumber = '') => {
 };
 
 window.updateEnrollment = async (id, status) => {
-    await updateDoc(doc(db, "enrollments", id), { status });
+    if (status === 'declined' && !confirm("Decline this training application?")) return;
+    await updateDoc(doc(db, "enrollments", id), {
+        status,
+        reviewedAt: serverTimestamp(),
+        reviewedBy: auth.currentUser?.uid || ''
+    });
     await loadEnrollments();
+};
+
+window.declineReset = async (ticketId, label = '') => {
+    if (!confirm(`Decline this security request${label ? ` for ${label}` : ''}?`)) return;
+    await updateDoc(doc(db, "password_resets", ticketId), {
+        status: "declined",
+        declinedAt: serverTimestamp(),
+        declinedBy: auth.currentUser?.uid || ''
+    });
+    await loadResetTickets();
 };
 
 window.updateAdminStatus = async (id, status) => {
@@ -1065,6 +1291,16 @@ window.approvePromotion = async (queueId, officerID, newRank) => {
     await postScriptAction({ action: "updateOfficerProfile", uniqueID: officerID, rank: newRank });
     await deleteDoc(doc(db, "promotion_queue", queueId));
     await Promise.all([loadPromotions(), fetchRegistry()]);
+};
+
+window.declinePromotion = async (queueId, label = '') => {
+    if (!confirm(`Decline this promotion recommendation${label ? ` for ${label}` : ''}?`)) return;
+    await updateDoc(doc(db, "promotion_queue", queueId), {
+        status: "declined",
+        declinedAt: serverTimestamp(),
+        declinedBy: auth.currentUser?.uid || ''
+    });
+    await loadPromotions();
 };
 
 window.approveReset = async (ticketId, email, name, serviceNo) => {
@@ -1217,12 +1453,14 @@ async function updateTransferredOfficerLocation(serviceNumber, stateCommand, are
 }
 
 function exportRegistryCsv() {
-    if (!allOfficers.length) return;
+    const exportData = Array.isArray(filteredRegistry) ? filteredRegistry : allOfficers;
+    if (!exportData.length) return;
 
     const rows = [
-        ['Timestamp', 'Service Number', 'Unique ID', 'Surname', 'First Name', 'Rank', 'Department', 'State Command'],
-        ...allOfficers.map((o) => [
+        ['Timestamp', 'Category', 'Service Number', 'Unique ID', 'Surname', 'First Name', 'Rank', 'Department', 'State Command'],
+        ...exportData.map((o) => [
             o["Timestamp"] || '',
+            o["Member Category"] || '',
             o["Service Number"] || '',
             o["Unique ID"] || '',
             o["Surname"] || '',

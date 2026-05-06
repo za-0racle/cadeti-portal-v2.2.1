@@ -1,6 +1,6 @@
-import { auth, db } from '../config.js';
+import { auth, db, SCRIPT_URL } from '../config.js';
 import { onAuthStateChanged, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { doc, getDoc, collection, getDocs, query, where, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { doc, getDoc, collection, getDocs, query, where, addDoc, serverTimestamp, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { setupSidebar } from '../components/Sidebar.js';
 
 const rankMapping = {
@@ -26,6 +26,16 @@ const FALLBACK_BADGE_POOL = [
     "https://drive.google.com/file/d/1LW8fcCR9neQFcfxE8xUzkREEdRkdC8kp/view?usp=sharing",
     "https://drive.google.com/file/d/170Ba_xhxUTSZt8PGrlMf0iR0QCDUixR5/view?usp=sharing"
 ];
+
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    }[char]));
+}
 
 function getCourseBadgeSource(course = {}, index = 0) {
     const normalizedTitle = String(course.title || '').trim().toLowerCase();
@@ -87,6 +97,78 @@ function createDashboardImageMarkup(url, alt, className = '') {
     `;
 }
 
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(reader.error || new Error("Unable to read file."));
+        reader.readAsDataURL(file);
+    });
+}
+
+async function uploadProfileMedia(file, type = 'profile') {
+    const dataUrl = await fileToBase64(file);
+    const [, base64 = ""] = dataUrl.split(',');
+    const response = await fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+            action: "uploadMedia",
+            base64,
+            mimeType: file.type,
+            fileName: `${type}-${Date.now()}-${file.name}`
+        })
+    });
+    const result = await response.json();
+    if (result.status !== "success" || !result.url) {
+        throw new Error(result.message || "Image upload failed.");
+    }
+    return result.url;
+}
+
+function getOfficerPassportUrl(officer = {}) {
+    return [
+        officer.passportUrl,
+        officer.passportURL,
+        officer.passport,
+        officer.photoUrl,
+        officer.photoURL,
+        officer.imageUrl,
+        officer.imageURL,
+        officer["Passport URL"],
+        officer["Passport Url"],
+        officer["PassportURL"],
+        officer["Passport Photo"],
+        officer["Photo URL"]
+    ].find((value) => String(value || '').trim() && String(value).trim() !== 'N/A') || '';
+}
+
+async function syncOfficerSheetProfile(payload) {
+    if (!currentOfficer?.uniqueID && !currentOfficer?.serviceNumber) return;
+
+    const response = await fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+            action: "updateOfficerProfile",
+            uniqueID: currentOfficer.uniqueID || "",
+            serviceNumber: currentOfficer.serviceNumber || "",
+            phone: payload.phone || "",
+            email: payload.email || "",
+            address: payload.address || "",
+            nokName: payload.nokName || "",
+            nokRelation: payload.nokRelation || "",
+            nokPhone: payload.nokPhone || "",
+            passportUrl: payload.passportUrl || "",
+            signatureUrl: payload.signatureUrl || ""
+        })
+    });
+    const result = await response.json();
+    if (result.status !== "success") {
+        throw new Error(result.message || "Registry sync failed.");
+    }
+}
+
 function wireDashboardImages(root = document) {
     root.querySelectorAll('.dashboard-image').forEach((image) => {
         if (image.dataset.imageBound === 'true') return;
@@ -116,6 +198,16 @@ function wireDashboardImages(root = document) {
     });
 }
 
+function updateSidebarPassport(passportUrl) {
+    const image = document.querySelector('.user-profile-brief .avatar-frame img');
+    if (!image) return;
+
+    const candidates = getAssetImageCandidates(passportUrl);
+    image.dataset.imageCandidates = JSON.stringify(candidates);
+    image.dataset.imageIndex = '0';
+    image.src = candidates[0];
+}
+
 function setDashboardVisible(isVisible) {
     const loader = document.getElementById('authGuardLoader');
     const wrapper = document.getElementById('dashboardWrapper');
@@ -141,7 +233,10 @@ function populateProfile(data) {
         { label: "Full Name", value: `${data.firstName || ''} ${data.otherName || ''} ${data.surname || ''}`.replace(/\s+/g, ' ').trim() || 'N/A' },
         { label: "Address", value: data.address || 'N/A' },
         { label: "Next of Kin", value: data.nokName ? `${data.nokName} (${data.nokRelation || 'N/A'})` : 'N/A' },
-        { label: "Unique ID", value: data.uniqueID || 'N/A' }
+        { label: "Next of Kin Phone", value: data.nokPhone || 'N/A' },
+        { label: "Unique ID", value: data.uniqueID || 'N/A' },
+        { label: "Passport", value: getOfficerPassportUrl(data) ? `<a href="${escapeHtml(getOfficerPassportUrl(data))}" target="_blank" rel="noopener">View uploaded passport</a>` : 'N/A', isHtml: true },
+        { label: "Signature", value: data.signatureUrl ? `<a href="${escapeHtml(data.signatureUrl)}" target="_blank" rel="noopener">View uploaded signature</a>` : 'N/A', isHtml: true }
     ];
 
     const list = document.getElementById('detailsList');
@@ -149,7 +244,7 @@ function populateProfile(data) {
         list.innerHTML = details.map((detail) => `
             <div class="detail-item">
                 <span class="label">${detail.label}</span>
-                <span class="value">${detail.value}</span>
+                <span class="value">${detail.isHtml ? detail.value : escapeHtml(detail.value)}</span>
             </div>
         `).join('');
     }
@@ -218,7 +313,9 @@ async function loadLMS() {
                     `;
                     earnedBadgeIndex += 1;
                 } else {
-                    actionBtn = `<button class="course-btn btn-pending" type="button" disabled>Processing</button>`;
+                    actionBtn = enroll.status === 'declined'
+                        ? `<button class="course-btn btn-pending" type="button" disabled>Declined</button>`
+                        : `<button class="course-btn btn-pending" type="button" disabled>Processing</button>`;
                 }
             }
 
@@ -381,6 +478,180 @@ function setupSecurityModal() {
     }
 }
 
+function setupProfileModal() {
+    const modal = document.getElementById('profileModal');
+    const openBtn = document.getElementById('openProfileModalBtn');
+    const closeBtn = document.getElementById('closeProfileBtn');
+    const form = document.getElementById('profileEditForm');
+    const msg = document.getElementById('profileMsg');
+    const passportInput = document.getElementById('profilePassport');
+    const passportPreview = document.getElementById('passportPreview');
+    const signatureInput = document.getElementById('profileSignature');
+    const signaturePreview = document.getElementById('signaturePreview');
+
+    const setMsg = (text, isError = false) => {
+        if (!msg) return;
+        msg.style.display = text ? 'block' : 'none';
+        msg.textContent = text;
+        msg.style.background = isError ? '#fee2e2' : '#eef7ef';
+        msg.style.color = isError ? '#991b1b' : '#184320';
+    };
+
+    const renderPassportPreview = (src = '') => {
+        if (!passportPreview) return;
+        passportPreview.innerHTML = src
+            ? createDashboardImageMarkup(src, 'Uploaded passport', 'passport-image')
+            : 'No passport uploaded yet.';
+        wireDashboardImages(passportPreview);
+    };
+
+    const renderSignaturePreview = (src = '') => {
+        if (!signaturePreview) return;
+        signaturePreview.innerHTML = src
+            ? createDashboardImageMarkup(src, 'Uploaded signature', 'signature-image')
+            : 'No signature uploaded yet.';
+        wireDashboardImages(signaturePreview);
+    };
+
+    const hydrateForm = () => {
+        if (!currentOfficer) return;
+        document.getElementById('profilePhone').value = currentOfficer.phone || '';
+        document.getElementById('profileEmail').value = currentOfficer.email || auth.currentUser?.email || '';
+        document.getElementById('profileAddress').value = currentOfficer.address || '';
+        document.getElementById('profileNokName').value = currentOfficer.nokName || '';
+        document.getElementById('profileNokRelation').value = currentOfficer.nokRelation || '';
+        document.getElementById('profileNokPhone').value = currentOfficer.nokPhone || '';
+        if (passportInput) passportInput.value = '';
+        if (signatureInput) signatureInput.value = '';
+        renderPassportPreview(getOfficerPassportUrl(currentOfficer));
+        renderSignaturePreview(currentOfficer.signatureUrl || '');
+        setMsg('');
+    };
+
+    const closeProfile = () => {
+        if (modal) modal.style.display = 'none';
+    };
+
+    if (openBtn) {
+        openBtn.addEventListener('click', () => {
+            hydrateForm();
+            if (modal) modal.style.display = 'flex';
+        });
+    }
+
+    if (closeBtn) closeBtn.addEventListener('click', closeProfile);
+    if (modal) {
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) closeProfile();
+        });
+    }
+
+    const validateImageFile = (file, label) => {
+        if (!file.type.startsWith('image/')) {
+            setMsg(`${label} must be an image file.`, true);
+            return false;
+        }
+        if (file.size > 5242880) {
+            setMsg(`${label} image must be 5MB or smaller.`, true);
+            return false;
+        }
+        return true;
+    };
+
+    if (passportInput) {
+        passportInput.addEventListener('change', () => {
+            const file = passportInput.files?.[0];
+            if (!file) {
+                renderPassportPreview(getOfficerPassportUrl(currentOfficer));
+                return;
+            }
+            if (!validateImageFile(file, 'Passport')) {
+                passportInput.value = '';
+                return;
+            }
+            renderPassportPreview(URL.createObjectURL(file));
+        });
+    }
+
+    if (signatureInput) {
+        signatureInput.addEventListener('change', () => {
+            const file = signatureInput.files?.[0];
+            if (!file) {
+                renderSignaturePreview(currentOfficer?.signatureUrl || '');
+                return;
+            }
+            if (!validateImageFile(file, 'Signature')) {
+                signatureInput.value = '';
+                return;
+            }
+            renderSignaturePreview(URL.createObjectURL(file));
+        });
+    }
+
+    if (form) {
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const user = auth.currentUser;
+            if (!user || !currentOfficer) return;
+
+            const saveBtn = document.getElementById('saveProfileBtn');
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.textContent = 'Saving...';
+            }
+            setMsg('');
+
+            try {
+                let passportUrl = getOfficerPassportUrl(currentOfficer);
+                const passportFile = passportInput?.files?.[0];
+                if (passportFile) {
+                    passportUrl = await uploadProfileMedia(passportFile, 'passport');
+                }
+
+                let signatureUrl = currentOfficer.signatureUrl || '';
+                const signatureFile = signatureInput?.files?.[0];
+                if (signatureFile) {
+                    signatureUrl = await uploadProfileMedia(signatureFile, 'signature');
+                }
+
+                const payload = {
+                    phone: document.getElementById('profilePhone')?.value.trim() || '',
+                    email: document.getElementById('profileEmail')?.value.trim() || '',
+                    address: document.getElementById('profileAddress')?.value.trim() || '',
+                    nokName: document.getElementById('profileNokName')?.value.trim() || '',
+                    nokRelation: document.getElementById('profileNokRelation')?.value.trim() || '',
+                    nokPhone: document.getElementById('profileNokPhone')?.value.trim() || '',
+                    passportUrl,
+                    signatureUrl,
+                    updatedAt: serverTimestamp()
+                };
+
+                await updateDoc(doc(db, "users", user.uid), payload);
+                try {
+                    await syncOfficerSheetProfile(payload);
+                } catch (syncError) {
+                    console.warn('Sheet profile sync failed:', syncError);
+                }
+
+                currentOfficer = { ...currentOfficer, ...payload };
+                populateProfile(currentOfficer);
+                updateSidebarPassport(passportUrl);
+                if (passportInput) passportInput.value = '';
+                if (signatureInput) signatureInput.value = '';
+                setMsg('Profile updated successfully.');
+            } catch (error) {
+                console.error('Profile update failed:', error);
+                setMsg(error.message || 'Unable to update profile.', true);
+            } finally {
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'Save Profile';
+                }
+            }
+        });
+    }
+}
+
 window.enroll = async (courseId, courseTitle) => {
     if (!auth.currentUser || !currentOfficer) return;
 
@@ -441,6 +712,7 @@ export function initDashboard() {
             setupTabListeners();
             setupSidebarToggle();
             setupSecurityModal();
+            setupProfileModal();
             setDashboardVisible(true);
         } catch (error) {
             console.error("Dashboard Sync Error:", error);

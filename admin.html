@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="/src/styles/admin.css">
+    <link rel="stylesheet" href="/src/styles/ID-card.css">
 </head>
 <body class="admin-page">
 
@@ -63,6 +64,10 @@
                         </div>
                     </section>
 
+                    <div class="registry-split-head">
+                        <h3>Member Table</h3>
+                        <span id="memberTableCount">0 records</span>
+                    </div>
                     <div class="table-container">
                         <table class="registry-table">
                             <thead>
@@ -77,6 +82,28 @@
                                 </tr>
                             </thead>
                             <tbody id="adminTableBody">
+                                <tr><td colspan="7" class="text-center">Awaiting command sync...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="registry-split-head">
+                        <h3>Recruit Table</h3>
+                        <span id="recruitTableCount">0 records</span>
+                    </div>
+                    <div class="table-container">
+                        <table class="registry-table">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Recruit ID</th>
+                                    <th>Full Name</th>
+                                    <th>Status</th>
+                                    <th>Dept.</th>
+                                    <th>Command</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recruitTableBody">
                                 <tr><td colspan="7" class="text-center">Awaiting command sync...</td></tr>
                             </tbody>
                         </table>
@@ -124,6 +151,47 @@
                         <table class="registry-table">
                             <thead><tr><th>Officer</th><th>Course</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
                             <tbody id="enrollmentBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="section-idcards" class="tab-content" style="display: none;">
+                    <header class="deck-header">
+                        <div class="header-title">
+                            <h1>ID Card Center</h1>
+                            <div class="status-indicator"><span class="pulse-dot"></span> Print Ready</div>
+                        </div>
+                    </header>
+                    <section class="filter-strip">
+                        <div class="id-card-toolbar">
+                            <div class="filter-box">
+                                <select id="idCardStateFilter">
+                                    <option value="">States</option>
+                                </select>
+                            </div>
+                            <div class="filter-box">
+                                <select id="idCardDeptFilter">
+                                    <option value="">Departments</option>
+                                </select>
+                            </div>
+                            <div class="filter-box">
+                                <select id="idCardRankFilter">
+                                    <option value="">Ranks</option>
+                                </select>
+                            </div>
+                            <div class="search-bar">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="idCardSearch" placeholder="Search officer, ID, rank or command...">
+                            </div>
+                            <span id="idCardCount">0 cards</span>
+                        </div>
+                    </section>
+                    <div class="table-container">
+                        <table class="registry-table id-card-table">
+                            <thead><tr><th>Officer</th><th>Service ID</th><th>Rank</th><th>Department</th><th>Command</th><th>Action</th></tr></thead>
+                            <tbody id="idCardListBody">
+                                <tr><td colspan="6" class="text-center">Preparing ID card list...</td></tr>
+                            </tbody>
                         </table>
                     </div>
                 </section>
@@ -181,6 +249,61 @@
             </div>
             <form id="editOfficerForm" class="modal-form">
                 <input type="hidden" id="editUid">
+                <section class="modal-section">
+                    <h4>Core Information</h4>
+                    <div class="grid-2">
+                        <div class="input-group-modal">
+                            <label for="editFullName">Full Name</label>
+                            <input type="text" id="editFullName" readonly>
+                        </div>
+                        <div class="input-group-modal">
+                            <label for="editServiceNumber">Service Number</label>
+                            <input type="text" id="editServiceNumber" readonly>
+                        </div>
+                        <div class="input-group-modal">
+                            <label for="editUniqueId">Unique ID</label>
+                            <input type="text" id="editUniqueId" readonly>
+                        </div>
+                        <div class="input-group-modal">
+                            <label for="editCommand">Command</label>
+                            <input type="text" id="editCommand" readonly>
+                        </div>
+                    </div>
+                </section>
+                <section class="modal-section">
+                    <h4>Officer Information</h4>
+                    <div class="input-group-modal">
+                        <label for="editPhone">Phone Number</label>
+                        <input type="tel" id="editPhone">
+                    </div>
+                    <div class="input-group-modal">
+                        <label for="editEmail">Email</label>
+                        <input type="email" id="editEmail">
+                    </div>
+                    <div class="input-group-modal">
+                        <label for="editAddress">Residential Address</label>
+                        <textarea id="editAddress" rows="2"></textarea>
+                    </div>
+                </section>
+                <section class="modal-section">
+                    <h4>Next of Kin Information</h4>
+                    <div class="grid-2">
+                        <div class="input-group-modal">
+                            <label for="editNokName">NOK Full Name</label>
+                            <input type="text" id="editNokName">
+                        </div>
+                        <div class="input-group-modal">
+                            <label for="editNokRelation">NOK Relationship</label>
+                            <input type="text" id="editNokRelation">
+                        </div>
+                    </div>
+                    <div class="input-group-modal">
+                        <label for="editNokPhone">NOK Phone Number</label>
+                        <input type="tel" id="editNokPhone">
+                    </div>
+                </section>
+                <section class="modal-section">
+                    <h4>Service Assignment</h4>
                 <div class="input-group-modal">
                     <label for="editPost">Current Post Held</label>
                     <input type="text" id="editPost" required>
@@ -193,6 +316,7 @@
                     <label for="editRank">Target Rank</label>
                     <select id="editRank"></select>
                 </div>
+                </section>
                 <button type="submit" class="cmd-btn">Commit Changes</button>
             </form>
         </div>

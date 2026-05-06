@@ -415,6 +415,27 @@
     background-color: #fcfdfe;
 }
 
+.registry-split-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 22px 2px 10px;
+}
+
+.registry-split-head h3 {
+    margin: 0;
+    color: var(--cmd-green);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 15px;
+}
+
+.registry-split-head span {
+    color: #667085;
+    font-size: 12px;
+    font-weight: 700;
+}
+
 .rank-badge {
     padding: 5px 12px;
     border-radius: 6px;
@@ -614,6 +635,22 @@
     gap: 15px;
 }
 
+.modal-section {
+    border: 1px solid #eef2f1;
+    border-radius: 14px;
+    padding: 16px;
+    background: #fbfdfc;
+}
+
+.modal-section h4 {
+    margin: 0 0 10px;
+    color: var(--cmd-green);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
 .input-group-modal {
     display: flex;
     flex-direction: column;
@@ -635,13 +672,239 @@
 .modal-form textarea,
 .modal-form input[type="text"],
 .modal-form input[type="email"],
-.modal-form input[type="file"] {
+.modal-form input[type="file"],
+.modal-form input[type="tel"] {
     padding: 14px;
     border: 1.5px solid #eee;
     border-radius: 12px;
     font-family: 'Poppins', sans-serif;
     font-size: 14px;
     background: #fafafa;
+}
+
+.input-group-modal input[readonly] {
+    background: #eef3ef;
+    color: #54615a;
+    cursor: not-allowed;
+}
+
+.id-card-toolbar {
+    display: grid;
+    grid-template-columns: minmax(140px, 180px) minmax(140px, 190px) minmax(150px, 210px) minmax(260px, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+}
+
+.id-card-toolbar span {
+    color: #667085;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.id-card-table {
+    min-width: 980px;
+}
+
+.canva-template-frame {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-top: 158.8235%;
+    box-shadow: 0 2px 8px 0 rgba(63,69,81,0.16);
+    overflow: hidden;
+    border-radius: 8px;
+    background: #eef3ef;
+}
+
+.canva-template-frame iframe {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+.canva-officer-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    font-family: 'Poppins', sans-serif;
+}
+
+.canva-field {
+    position: absolute;
+    color: #061a08;
+    font-weight: 800;
+    line-height: 1.15;
+    text-align: center;
+    overflow-wrap: anywhere;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.55);
+}
+
+.canva-passport-slot {
+    position: absolute;
+    left: 29%;
+    top: 22.5%;
+    width: 42%;
+    aspect-ratio: 1;
+    border-radius: 999px;
+    overflow: hidden;
+    background: #eaf1eb;
+}
+
+.canva-passport-slot img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.canva-name {
+    left: 9%;
+    right: 9%;
+    top: 49.5%;
+    font-family: 'Montserrat', sans-serif;
+    font-size: clamp(13px, 3.6vw, 20px);
+    color: #002b05;
+}
+
+.canva-rank {
+    left: 16%;
+    right: 16%;
+    top: 56.5%;
+    font-size: clamp(11px, 3vw, 16px);
+    color: #cc0000;
+}
+
+.canva-service {
+    left: 13%;
+    right: 13%;
+    top: 62.5%;
+    font-size: clamp(10px, 2.7vw, 15px);
+}
+
+.canva-state {
+    left: 11%;
+    width: 37%;
+    top: 69.4%;
+    font-size: clamp(9px, 2.4vw, 13px);
+}
+
+.canva-area {
+    right: 11%;
+    width: 37%;
+    top: 69.4%;
+    font-size: clamp(9px, 2.4vw, 13px);
+}
+
+.canva-post {
+    left: 11%;
+    right: 11%;
+    top: 75.6%;
+    font-size: clamp(9px, 2.4vw, 13px);
+}
+
+.canva-command {
+    left: 11%;
+    right: 11%;
+    top: 81.5%;
+    font-size: clamp(8px, 2.2vw, 12px);
+}
+
+.canva-signature-slot {
+    position: absolute;
+    left: 33%;
+    bottom: 8.2%;
+    width: 34%;
+    height: 6%;
+}
+
+.canva-signature-slot img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    mix-blend-mode: multiply;
+}
+
+.id-card-modal-card {
+    max-width: min(520px, calc(100vw - 32px));
+}
+
+.id-card-preview-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.id-card-preview-stage {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 18px;
+    position: relative;
+}
+
+.canva-modal-stage {
+    max-width: 360px;
+    margin: 0 auto;
+}
+
+.canva-modal-frame {
+    width: 100%;
+}
+
+.canva-open-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.id-card-preview-stage.is-loading::after {
+    content: "Generating print preview...";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.78);
+    color: var(--cmd-green);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+    border-radius: 14px;
+}
+
+.id-card-preview-slot {
+    background: #eef3ef;
+    border-radius: 14px;
+    padding: 12px;
+    border: 1px solid #dfe7e1;
+}
+
+.id-card-preview-slot span {
+    display: block;
+    color: #667085;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.id-card-preview-slot canvas {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 10px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+    background: #fff;
 }
 
 .badge-source-toggle {
@@ -888,6 +1151,15 @@
     .course-grid {
         grid-template-columns: 1fr 1fr;
     }
+
+    .id-card-toolbar {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .canva-template-frame {
+        max-width: 320px;
+        justify-self: center;
+    }
 }
 
 @media screen and (max-width: 768px) {
@@ -956,8 +1228,14 @@
 
     .filter-controls,
     .grid-2,
-    .course-grid {
+    .course-grid,
+    .id-card-toolbar,
+    .id-card-preview-stage {
         grid-template-columns: 1fr;
+    }
+
+    .id-card-preview-actions {
+        display: grid;
     }
 
     .search-bar {

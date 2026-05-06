@@ -232,6 +232,14 @@ function updateOfficerProfile(data) {
     "Post Held": data.postHeld,
     "State Command": data.state,
     "Area Command": data.area,
+    "Phone Number": data.phone,
+    "Email": data.email,
+    "Residential Address": data.address,
+    "NOK Full Name": data.nokName,
+    "NOK Relationship": data.nokRelation,
+    "NOK Phone Number": data.nokPhone,
+    "Passport URL": data.passportUrl,
+    "Signature URL": data.signatureUrl,
     "PDF URL": data.pdfUrl
   };
 

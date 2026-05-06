@@ -1,0 +1,2 @@
+const FIREBASE_PROJECT_ID = "cadeti-officer-portal";
+const FIREBASE_CLIENT_EMAIL = "firebase-adminsdk-fbsvc@cadeti-officer-portal.iam.gserviceaccount.com";

@@ -52,7 +52,12 @@
                     </section>
 
                     <section class="full-details-section animate-up" style="animation-delay: 0.3s;">
-                        <h4 class="section-title">Personnel Records</h4>
+                        <div class="section-title-row">
+                            <h4 class="section-title">Personnel Records</h4>
+                            <button class="profile-edit-btn" type="button" id="openProfileModalBtn">
+                                <i class="fa-solid fa-user-pen"></i> Edit Profile
+                            </button>
+                        </div>
                         <div class="details-list" id="detailsList">
                             <!-- JS will inject key-value pairs here -->
                         </div>
@@ -83,6 +88,58 @@
                 </div>
             </div>
         </main>
+    </div>
+
+    <div id="profileModal" class="modal-overlay">
+        <div class="modal-card animate-up">
+            <button class="close-modal" id="closeProfileBtn">&times;</button>
+            <h3>Profile Information</h3>
+            <p class="subtitle">Update contact records and upload your signature.</p>
+            <form id="profileEditForm" class="profile-form">
+                <section class="profile-form-section">
+                    <h4>Officer Information</h4>
+                    <div class="input-group-modal">
+                        <label for="profilePhone">Phone Number</label>
+                        <input type="tel" id="profilePhone" placeholder="Phone number">
+                    </div>
+                    <div class="input-group-modal">
+                        <label for="profileEmail">Email Address</label>
+                        <input type="email" id="profileEmail" placeholder="Email address">
+                    </div>
+                    <div class="input-group-modal">
+                        <label for="profileAddress">Residential Address</label>
+                        <input type="text" id="profileAddress" placeholder="Residential address">
+                    </div>
+                    <div class="input-group-modal passport-upload-field">
+                        <label for="profilePassport">Passport Upload</label>
+                        <input type="file" id="profilePassport" accept="image/*">
+                        <div id="passportPreview" class="passport-preview"></div>
+                    </div>
+                    <div class="input-group-modal signature-upload-field">
+                        <label for="profileSignature">Signature Upload</label>
+                        <input type="file" id="profileSignature" accept="image/*">
+                        <div id="signaturePreview" class="signature-preview"></div>
+                    </div>
+                </section>
+                <section class="profile-form-section">
+                    <h4>Next of Kin Information</h4>
+                    <div class="input-group-modal">
+                        <label for="profileNokName">Full Name</label>
+                        <input type="text" id="profileNokName" placeholder="Next of kin full name">
+                    </div>
+                    <div class="input-group-modal">
+                        <label for="profileNokRelation">Relationship</label>
+                        <input type="text" id="profileNokRelation" placeholder="Next of kin relationship">
+                    </div>
+                    <div class="input-group-modal">
+                        <label for="profileNokPhone">Phone Number</label>
+                        <input type="tel" id="profileNokPhone" placeholder="Next of kin phone">
+                    </div>
+                </section>
+                <button type="submit" class="cmd-btn" id="saveProfileBtn">Save Profile</button>
+                <div id="profileMsg" class="status-box" style="display: none;"></div>
+            </form>
+        </div>
     </div>
 
     <!-- SECURITY MODAL -->

@@ -361,6 +361,33 @@ body.dashboard-sidebar-open .sidebar {
     font-size: 1.15rem;
 }
 
+.section-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.section-title-row .section-title {
+    margin: 0;
+}
+
+.profile-edit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 0;
+    border-radius: 12px;
+    padding: 10px 14px;
+    background: #002b05;
+    color: #fff;
+    font: inherit;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
 .details-list {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -654,12 +681,29 @@ body.dashboard-sidebar-open .sidebar {
     justify-content: center;
     padding: 20px;
     z-index: 200;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
 }
 
 .modal-card {
     width: min(100%, 460px);
+    max-height: calc(100dvh - 40px);
+    overflow-y: auto;
     border-radius: 24px;
     padding: 26px;
+    box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 43, 5, 0.24) transparent;
+}
+
+.modal-card::-webkit-scrollbar {
+    width: 7px;
+}
+
+.modal-card::-webkit-scrollbar-thumb {
+    background: rgba(0, 43, 5, 0.24);
+    border-radius: 999px;
 }
 
 .modal-card h3,
@@ -693,6 +737,32 @@ body.dashboard-sidebar-open .sidebar {
     gap: 12px;
 }
 
+.profile-form {
+    display: grid;
+    gap: 14px;
+}
+
+.profile-form-section {
+    display: grid;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid rgba(0, 43, 5, 0.08);
+    border-radius: 18px;
+    background: linear-gradient(180deg, #ffffff, #f8fbf8);
+}
+
+.profile-form-section h4 {
+    margin: 0;
+    color: #002b05;
+    font-size: 0.98rem;
+}
+
+.input-group-modal label {
+    color: #55735b;
+    font-size: 0.84rem;
+    font-weight: 600;
+}
+
 .input-group-modal input {
     width: 100%;
     box-sizing: border-box;
@@ -700,6 +770,38 @@ body.dashboard-sidebar-open .sidebar {
     border-radius: 14px;
     border: 1px solid rgba(0, 43, 5, 0.12);
     font: inherit;
+}
+
+.passport-preview,
+.signature-preview {
+    min-height: 58px;
+    border: 1px dashed rgba(0, 43, 5, 0.18);
+    border-radius: 14px;
+    background: rgba(248, 251, 248, 0.92);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    color: #6a7d6d;
+    font-size: 0.86rem;
+}
+
+.passport-preview {
+    min-height: 118px;
+}
+
+.passport-preview img {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid rgba(0, 43, 5, 0.16);
+}
+
+.signature-preview img {
+    max-width: 100%;
+    max-height: 76px;
+    object-fit: contain;
 }
 
 .cmd-btn {
@@ -795,9 +897,15 @@ body.dashboard-sidebar-open .sidebar {
 @media (max-width: 768px) {
     .top-bar,
     .catalog-title-row,
+    .section-title-row,
     .course-meta {
         align-items: flex-start;
         flex-direction: column;
+    }
+
+    .profile-edit-btn {
+        width: 100%;
+        justify-content: center;
     }
 
     .header-stats {
@@ -829,6 +937,12 @@ body.dashboard-sidebar-open .sidebar {
     .modal-overlay {
         align-items: flex-start;
         overflow-y: auto;
+        padding: 12px;
+    }
+
+    .modal-card {
+        width: 100%;
+        max-height: calc(100dvh - 24px);
     }
 }
 

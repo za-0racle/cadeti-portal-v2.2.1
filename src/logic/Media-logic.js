@@ -312,6 +312,7 @@ async function loadCommentModeration() {
         snap.forEach((item) => {
             const comment = item.data();
             if (comment.isApproved === true) return;
+            if (comment.status === 'declined') return;
 
             const postRef = item.ref.parent.parent;
             comments.push({
@@ -344,6 +345,7 @@ async function loadCommentModeration() {
                 <p>${escapeHtml(comment.text || '')}</p>
                 <div class="comment-actions">
                     <button class="cmd-btn-small" type="button" onclick="window.approveComment('${comment.postId}', '${comment.id}')">Approve</button>
+                    <button class="cmd-btn-small danger" type="button" onclick="window.declineComment('${comment.postId}', '${comment.id}')">Decline</button>
                     <button class="cmd-btn-small danger" type="button" onclick="window.deleteComment('${comment.postId}', '${comment.id}')">Delete</button>
                 </div>
             </article>
@@ -407,8 +409,23 @@ window.approveComment = async (postId, commentId) => {
 
     await updateDoc(doc(db, "publications", postId, "comments", commentId), {
         isApproved: true,
+        status: 'approved',
         approvedAt: serverTimestamp(),
         approvedBy: auth.currentUser?.uid || ''
+    });
+
+    await loadCommentModeration();
+};
+
+window.declineComment = async (postId, commentId) => {
+    if (!postId || !commentId) return;
+    if (!confirm("Decline this comment?")) return;
+
+    await updateDoc(doc(db, "publications", postId, "comments", commentId), {
+        isApproved: false,
+        status: 'declined',
+        declinedAt: serverTimestamp(),
+        declinedBy: auth.currentUser?.uid || ''
     });
 
     await loadCommentModeration();

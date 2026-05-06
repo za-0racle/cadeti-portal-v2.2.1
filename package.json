@@ -10,5 +10,10 @@
   },
   "devDependencies": {
     "vite": "^8.0.10"
+  },
+  "dependencies": {
+    "jsbarcode": "^3.12.3",
+    "jspdf": "^4.2.1",
+    "qrcode": "^1.5.4"
   }
 }
