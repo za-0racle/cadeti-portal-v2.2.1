@@ -1,3 +1,5 @@
+import { SCRIPT_URL } from '../config.js';
+
 const LOGO_IMAGE = '/logo.png';
 const COAT_OF_ARMS_IMAGE = '/coat-of-arm.png';
 const ID_CARD_LIBS = {
@@ -141,6 +143,87 @@ function downloadDataUrl(dataUrl, filename) {
     document.body.appendChild(link);
     link.click();
     link.remove();
+}
+
+function waitForImage(image) {
+    return new Promise((resolve) => {
+        if (!image || image.complete) {
+            resolve();
+            return;
+        }
+
+        image.addEventListener('load', resolve, { once: true });
+        image.addEventListener('error', resolve, { once: true });
+    });
+}
+
+async function waitForImages(root) {
+    const images = [...root.querySelectorAll('img')];
+    await Promise.all(images.map(waitForImage));
+}
+
+async function urlToDataUrl(url) {
+    const cleanUrl = String(url || '').trim();
+    if (!cleanUrl) throw new Error('Missing image URL.');
+    if (cleanUrl.startsWith('data:')) return cleanUrl;
+
+    const parsedUrl = new URL(cleanUrl, window.location.origin);
+    const isSameOrigin = parsedUrl.origin === window.location.origin;
+    if (!isSameOrigin) return proxyImageDataUrl(parsedUrl.href);
+
+    const response = await fetch(url, { mode: 'cors', cache: 'force-cache' });
+    if (!response.ok) throw new Error(`Unable to prepare image: ${url}`);
+    const blob = await response.blob();
+    return blobToDataUrl(blob);
+}
+
+async function proxyImageDataUrl(url) {
+    const response = await fetch(`${SCRIPT_URL}?action=proxyImage&url=${encodeURIComponent(url)}`);
+    const result = await response.json();
+    if (result.status !== 'success' || !result.dataUrl) {
+        throw new Error(result.message || 'Unable to prepare remote image for export.');
+    }
+    return result.dataUrl;
+}
+
+async function inlineExportImages(root) {
+    const images = [...root.querySelectorAll('img')];
+    const restores = [];
+
+    await Promise.all(images.map(async (image) => {
+        const originalSrc = image.getAttribute('src') || '';
+        if (!originalSrc || originalSrc.startsWith('data:')) return;
+
+        const candidates = (() => {
+            try {
+                return JSON.parse(image.dataset.imageCandidates || '[]');
+            } catch {
+                return [];
+            }
+        })();
+        const exportSources = [image.currentSrc, originalSrc, ...candidates].filter(Boolean);
+
+        try {
+            let dataUrl = '';
+            let lastError = null;
+            for (const source of [...new Set(exportSources)]) {
+                try {
+                    dataUrl = await urlToDataUrl(source);
+                    break;
+                } catch (error) {
+                    lastError = error;
+                }
+            }
+            if (!dataUrl && lastError) throw lastError;
+            restores.push(() => image.setAttribute('src', originalSrc));
+            image.setAttribute('src', dataUrl);
+        } catch (error) {
+            console.warn('ID card image could not be embedded for export:', originalSrc, error);
+        }
+    }));
+
+    await waitForImages(root);
+    return () => restores.forEach((restore) => restore());
 }
 
 function normalizePersonnel(personnel = {}) {
@@ -312,12 +395,33 @@ export async function generateIDCard(personnel) {
                 downloadButton.disabled = true;
                 downloadButton.textContent = 'Downloading...';
 
+                let restoreFrontImages = () => {};
+                let restoreBackImages = () => {};
+
                 try {
                     await document.fonts?.ready;
+                    await waitForImages(frontSide);
+                    await waitForImages(backSide);
+
+                    frontSide.classList.add('is-exporting');
+                    backSide.classList.add('is-exporting');
+
+                    restoreFrontImages = await inlineExportImages(frontSide);
+                    restoreBackImages = await inlineExportImages(backSide);
+
                     const exportOptions = {
                         quality: 1,
                         pixelRatio: 3,
                         cacheBust: true,
+                        skipAutoScale: true,
+                        width: 323,
+                        height: 504,
+                        style: {
+                            transform: 'none',
+                            animation: 'none',
+                            transition: 'none'
+                        },
+                        fontEmbedCSS: '',
                         imagePlaceholder: LOGO_IMAGE
                     };
                     const front = await window.htmlToImage.toPng(frontSide, exportOptions);
@@ -331,6 +435,10 @@ export async function generateIDCard(personnel) {
                     console.error('ID card download failed:', error);
                     alert(error.message || 'Unable to download this ID card. Please try again.');
                 } finally {
+                    restoreFrontImages();
+                    restoreBackImages();
+                    frontSide?.classList.remove('is-exporting');
+                    backSide?.classList.remove('is-exporting');
                     downloadButton.disabled = false;
                     downloadButton.textContent = 'Download Print-Ready ID';
                 }

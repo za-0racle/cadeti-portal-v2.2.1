@@ -21,6 +21,11 @@ function doGet(e) {
       return jsonResponse(sheetRowsToObjects(ss.getSheetByName("Locations")));
     }
 
+    if (action === "proxyImage") {
+      requireParams(params, ["url"]);
+      return proxyImage(params.url);
+    }
+
     if (action === "searchRecruit") {
       requireParams(params, ["id"]);
       const result = findRecordByHeader(ss.getSheetByName("Recruits"), "Unique ID", params.id);
@@ -535,6 +540,38 @@ function createOfficialPDF(data, id, sn, blob, templateId) {
 
 function getFirebaseProjectId() {
   return getScriptProperty("FIREBASE_PROJECT_ID");
+}
+
+function proxyImage(url) {
+  const cleanUrl = String(url || "").trim();
+  if (!cleanUrl) throw new Error("Missing image URL.");
+
+  const driveId = extractDriveFileId(cleanUrl);
+  let blob;
+
+  if (driveId) {
+    blob = DriveApp.getFileById(driveId).getBlob();
+  } else {
+    const response = UrlFetchApp.fetch(cleanUrl, {
+      muteHttpExceptions: true,
+      followRedirects: true
+    });
+    const code = response.getResponseCode();
+    if (code < 200 || code >= 300) throw new Error("Image fetch failed with status " + code + ".");
+    blob = response.getBlob();
+  }
+
+  const contentType = blob.getContentType() || "image/png";
+  const base64 = Utilities.base64Encode(blob.getBytes());
+  return jsonResponse({
+    status: "success",
+    dataUrl: "data:" + contentType + ";base64," + base64
+  });
+}
+
+function extractDriveFileId(url) {
+  const match = String(url || "").match(/[-\w]{25,}/);
+  return match ? match[0] : "";
 }
 
 function getFirebaseClientEmail() {

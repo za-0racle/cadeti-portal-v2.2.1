@@ -18,7 +18,7 @@ export const db = getFirestore(app);
 export const storage = getStorage(app);
 
 // THE URL YOU PROVIDED
-export const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwf8yg8PLa09msEH9zV7vhFizylumG_AFBtTpUHQEtDGrvRLTr9ILMNtbKynqn2PET9Fg/exec";
+export const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyKyUuX8uU9Xp9VCYzyIf4LE2P0o75QeZMdam910FlYj_9AyJF6w78v2QM3Pg6gVGuyoA/exec";
 export const FORMSPREE_FORM_ID = "xpqbzgoj";
 export const FORMSPREE_ENDPOINT = `https://formspree.io/f/${FORMSPREE_FORM_ID}`;
 

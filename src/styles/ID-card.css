@@ -65,6 +65,13 @@
     box-shadow: 0 15px 32px rgba(0, 44, 16, 0.22);
 }
 
+.id-card-wrap.is-exporting,
+.id-card-wrap.is-exporting:hover {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+}
+
 .id-card-wrap,
 .id-card-wrap * {
     box-sizing: border-box;
@@ -160,6 +167,11 @@
     font-size: 9.8px;
     font-weight: 800;
     padding: 4px 4px;
+    min-height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.18;
     text-align: center;
     margin: 6px 38px 8px;
     letter-spacing: 3.8px;
