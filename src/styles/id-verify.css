@@ -1,0 +1,218 @@
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: 'Poppins', sans-serif;
+    color: #101510;
+    background:
+        radial-gradient(circle at top left, rgba(7, 143, 59, 0.18), transparent 30%),
+        linear-gradient(135deg, #f6faf7 0%, #ffffff 46%, #eef8f1 100%);
+}
+
+.verify-shell {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.verify-card {
+    width: min(420px, 100%);
+    background: #fff;
+    border: 10px solid #078f3b;
+    border-top-color: #e0271e;
+    border-bottom-color: #e0271e;
+    box-shadow: 0 24px 70px rgba(0, 47, 18, 0.22);
+    position: relative;
+    overflow: hidden;
+    animation: verifyIn 420ms ease both;
+}
+
+.verify-card::before {
+    content: "";
+    position: absolute;
+    width: 360px;
+    height: 360px;
+    background: url('/logo.png') center / contain no-repeat;
+    opacity: 0.04;
+    left: 50%;
+    top: 118px;
+    transform: translateX(-50%);
+    pointer-events: none;
+}
+
+.verify-inner {
+    position: relative;
+    z-index: 1;
+    padding: 22px 24px 26px;
+    text-align: center;
+}
+
+.verify-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.verify-header img {
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
+}
+
+.verify-header h1 {
+    margin: 0;
+    color: #078f3b;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+    line-height: 1.18;
+    font-weight: 800;
+}
+
+.verify-banner {
+    display: inline-block;
+    background: #078f3b;
+    color: #fff;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 2.5px;
+    padding: 8px 18px;
+    margin: 8px 0 18px;
+}
+
+.verify-passport {
+    width: 132px;
+    height: 132px;
+    margin: 0 auto 18px;
+    border-radius: 999px;
+    overflow: hidden;
+    border: 4px solid #fff;
+    box-shadow: 0 11px 26px rgba(0, 68, 24, 0.22), 0 0 0 1px rgba(7, 143, 59, 0.25);
+    background: #eef3ef;
+    display: grid;
+    place-items: center;
+}
+
+.verify-passport img {
+    width: 90%;
+    height: 90%;
+    object-fit: contain;
+    object-position: center top;
+    border-radius: 999px;
+}
+
+.verify-passport span {
+    color: #078f3b;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.verify-details {
+    display: grid;
+    gap: 8px;
+    text-align: left;
+    margin: 0 0 20px;
+}
+
+.verify-row {
+    display: grid;
+    grid-template-columns: 128px minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px;
+    line-height: 1.28;
+}
+
+.verify-row strong {
+    color: #000;
+    font-weight: 800;
+}
+
+.verify-row span {
+    color: #078f3b;
+    font-weight: 800;
+    overflow-wrap: anywhere;
+}
+
+.course-strip {
+    border-top: 1px solid rgba(7, 143, 59, 0.18);
+    padding-top: 16px;
+}
+
+.course-strip h2 {
+    margin: 0 0 12px;
+    color: #e0271e;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.course-badges {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.course-badge {
+    min-height: 86px;
+    border: 1px solid rgba(7, 143, 59, 0.18);
+    background: rgba(7, 143, 59, 0.035);
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.course-badge img {
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
+}
+
+.course-badge span {
+    color: #111;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.verify-state {
+    padding: 38px 24px;
+    text-align: center;
+    color: #078f3b;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+}
+
+@keyframes verifyIn {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.985);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@media (max-width: 420px) {
+    .verify-shell {
+        padding: 14px;
+    }
+
+    .verify-inner {
+        padding: 18px;
+    }
+
+    .verify-row {
+        grid-template-columns: 1fr;
+        gap: 2px;
+    }
+}

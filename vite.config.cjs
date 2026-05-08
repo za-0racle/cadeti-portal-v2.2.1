@@ -17,7 +17,8 @@ module.exports = {
                 publications: 'publications.html',
                 recruitRegistration: 'recruit-reg.html',
                 signup: 'signup.html',
-                view: 'view.html'
+                view: 'view.html',
+                verifyId: 'verify-id.html'
             }
         }
     }

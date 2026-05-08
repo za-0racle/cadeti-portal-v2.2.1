@@ -10,7 +10,7 @@ startAuthObserver();
 
 // 2. ONLY setup Website UI if NOT on a Dashboard/Admin page
 const path = window.location.pathname.toLowerCase();
-const isDashboard = path.includes('admin') || path.includes('dashboard');
+const isDashboard = path.includes('admin') || path.includes('dashboard') || path.includes('verify-id.html');
 
 if (!isDashboard) {
     setupNavbar();
@@ -59,6 +59,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- DYNAMIC READER (Single Post View) ---
     if (path.includes('view.html')) {
         import('./logic/Public-media-logic.js').then(m => m.loadSinglePost());
+    }
+
+    if (path.includes('verify-id.html')) {
+        import('./logic/ID-verification.js').then(m => m.initIdVerification());
     }
     // 3. PAGE SPECIFIC LOGIC
     if (path.includes('login')) {

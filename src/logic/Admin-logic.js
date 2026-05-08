@@ -264,6 +264,7 @@ function bindAdminUI() {
     const filterState = document.getElementById('filterState');
     const filterDept = document.getElementById('filterDept');
     const filterRank = document.getElementById('filterRank');
+    const filterCategory = document.getElementById('filterCategory');
     const exportBtn = document.getElementById('exportBtn');
     const sidebarTarget = document.getElementById('adminSidebarTarget');
     const mobileToggle = document.getElementById('mobileToggle');
@@ -285,7 +286,7 @@ function bindAdminUI() {
         });
     }
 
-    [adminSearch, filterState, filterDept, filterRank].forEach((el) => {
+    [adminSearch, filterState, filterDept, filterRank, filterCategory].forEach((el) => {
         if (el) el.addEventListener('input', applyFilters);
         if (el && el.tagName === 'SELECT') el.addEventListener('change', applyFilters);
     });
@@ -543,15 +544,22 @@ function renderTable(data, tbodyId = 'adminTableBody', tableType = 'member') {
 }
 
 function populateFilters(data) {
-    populateSelect('filterState', [...new Set(data.map((o) => o["State Command"]).filter(Boolean))].sort(), 'States', adminRole === 'state' ? adminState : '');
+    const commandFilter = getCommandFilterConfig();
+    populateSelect('filterState', [...new Set(data.map((o) => o[commandFilter.field]).filter(Boolean))].sort(), commandFilter.placeholder);
     populateSelect('filterDept', [...new Set(data.map((o) => o["Department"]).filter(Boolean))].sort(), 'Departments');
     populateSelect('filterRank', RANK_LIST, 'Ranks');
-    populateSelect('idCardStateFilter', [...new Set(data.map((o) => o["State Command"]).filter(Boolean))].sort(), 'States', adminRole === 'state' ? adminState : '');
+    populateSelect('idCardStateFilter', [...new Set(data.map((o) => o[commandFilter.field]).filter(Boolean))].sort(), commandFilter.placeholder);
     populateSelect('idCardDeptFilter', [...new Set(data.map((o) => o["Department"]).filter(Boolean))].sort(), 'Departments');
     populateSelect('idCardRankFilter', RANK_LIST, 'Ranks');
     populateSelect('newAdminState', [...new Set(data.map((o) => o["State Command"]).filter(Boolean))].sort(), 'Select State');
     populateSelect('targetState', [...new Set(data.map((o) => o["State Command"]).filter(Boolean))].sort(), 'Select State');
     populateTargetAreas(document.getElementById('targetState')?.value || '');
+}
+
+function getCommandFilterConfig() {
+    return adminRole === 'state'
+        ? { field: "Area Command", placeholder: "Area Commands" }
+        : { field: "State Command", placeholder: "States" };
 }
 
 function populateSelect(id, options, placeholder, forcedValue = null) {
@@ -591,29 +599,45 @@ function populateTargetAreas(state) {
 }
 
 function applyFilters() {
-    const searchTerm = (document.getElementById('adminSearch')?.value || '').trim().toLowerCase();
-    const selectedState = document.getElementById('filterState')?.value || '';
-    const selectedDept = document.getElementById('filterDept')?.value || '';
-    const selectedRank = document.getElementById('filterRank')?.value || '';
-
-    const filtered = allOfficers.filter((officer) => {
-        const haystack = [
-            officer["Service Number"],
-            officer["Unique ID"],
-            officer["Surname"],
-            officer["First Name"]
-        ].filter(Boolean).join(' ').toLowerCase();
-
-        return (!searchTerm || haystack.includes(searchTerm))
-            && (!selectedState || officer["State Command"] === selectedState)
-            && (!selectedDept || officer["Department"] === selectedDept)
-            && (!selectedRank || officer["Rank"] === selectedRank);
-    });
+    const filtered = getFilteredRegistryData();
 
     filteredRegistry = filtered;
     renderRegistryTables(filtered);
     renderIdCardCenter();
     updateKpis(filtered);
+}
+
+function getFilteredRegistryData() {
+    const searchTerm = (document.getElementById('adminSearch')?.value || '').trim().toLowerCase();
+    const selectedCommand = document.getElementById('filterState')?.value || '';
+    const selectedDept = document.getElementById('filterDept')?.value || '';
+    const selectedRank = document.getElementById('filterRank')?.value || '';
+    const selectedCategory = document.getElementById('filterCategory')?.value || '';
+    const commandFilter = getCommandFilterConfig();
+
+    return allOfficers.filter((officer) => {
+        const isRecruit = isRecruitRecord(officer);
+        const haystack = [
+            officer["Service Number"],
+            officer["Unique ID"],
+            officer["Surname"],
+            officer["First Name"],
+            officer["State Command"],
+            officer["Area Command"]
+        ].filter(Boolean).join(' ').toLowerCase();
+
+        return (!searchTerm || haystack.includes(searchTerm))
+            && (!selectedCommand || officer[commandFilter.field] === selectedCommand)
+            && (!selectedDept || officer["Department"] === selectedDept)
+            && (!selectedRank || officer["Rank"] === selectedRank)
+            && (!selectedCategory || (selectedCategory === 'recruit' ? isRecruit : !isRecruit));
+    });
+}
+
+function getActiveRegistryExportData() {
+    const filtered = getFilteredRegistryData();
+    filteredRegistry = filtered;
+    return filtered;
 }
 
 function updateKpis(data) {
@@ -819,9 +843,10 @@ async function loadCourseManager() {
 function getIdCardOfficerList() {
     const base = Array.isArray(filteredRegistry) ? filteredRegistry : allOfficers;
     const searchTerm = (document.getElementById('idCardSearch')?.value || '').trim().toLowerCase();
-    const selectedState = document.getElementById('idCardStateFilter')?.value || '';
+    const selectedCommand = document.getElementById('idCardStateFilter')?.value || '';
     const selectedDept = document.getElementById('idCardDeptFilter')?.value || '';
     const selectedRank = document.getElementById('idCardRankFilter')?.value || '';
+    const commandFilter = getCommandFilterConfig();
 
     return base.filter((officer) => {
         if (isRecruitRecord(officer)) return false;
@@ -837,7 +862,7 @@ function getIdCardOfficerList() {
         ].filter(Boolean).join(' ').toLowerCase();
 
         return (!searchTerm || haystack.includes(searchTerm))
-            && (!selectedState || officer["State Command"] === selectedState)
+            && (!selectedCommand || officer[commandFilter.field] === selectedCommand)
             && (!selectedDept || officer["Department"] === selectedDept)
             && (!selectedRank || officer["Rank"] === selectedRank);
     });
@@ -1453,11 +1478,17 @@ async function updateTransferredOfficerLocation(serviceNumber, stateCommand, are
 }
 
 function exportRegistryCsv() {
-    const exportData = Array.isArray(filteredRegistry) ? filteredRegistry : allOfficers;
-    if (!exportData.length) return;
+    const exportData = getActiveRegistryExportData();
+    renderRegistryTables(exportData);
+    renderIdCardCenter();
+    updateKpis(exportData);
+    if (!exportData.length) {
+        alert("No records match the current registry filters.");
+        return;
+    }
 
     const rows = [
-        ['Timestamp', 'Category', 'Service Number', 'Unique ID', 'Surname', 'First Name', 'Rank', 'Department', 'State Command'],
+        ['Timestamp', 'Category', 'Service Number', 'Unique ID', 'Surname', 'First Name', 'Rank', 'Department', 'State Command', 'Area Command'],
         ...exportData.map((o) => [
             o["Timestamp"] || '',
             o["Member Category"] || '',
@@ -1467,7 +1498,8 @@ function exportRegistryCsv() {
             o["First Name"] || '',
             o["Rank"] || '',
             o["Department"] || '',
-            o["State Command"] || ''
+            o["State Command"] || '',
+            o["Area Command"] || ''
         ])
     ];
 
@@ -1475,7 +1507,20 @@ function exportRegistryCsv() {
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = 'cadeti-registry.csv';
+    link.download = getRegistryExportFilename(exportData.length);
     link.click();
     URL.revokeObjectURL(link.href);
+}
+
+function getRegistryExportFilename(count) {
+    const command = document.getElementById('filterState')?.value || 'all-commands';
+    const dept = document.getElementById('filterDept')?.value || 'all-departments';
+    const rank = document.getElementById('filterRank')?.value || 'all-ranks';
+    const category = document.getElementById('filterCategory')?.value || 'all-types';
+    const search = document.getElementById('adminSearch')?.value || '';
+    const parts = ['cadeti-registry', command, dept, rank, category, search, `${count}-records`]
+        .map((part) => String(part).trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''))
+        .filter(Boolean);
+
+    return `${parts.join('_')}.csv`;
 }

@@ -59,6 +59,11 @@ async function makeQrDataUrl(value) {
     return blobToDataUrl(blob);
 }
 
+function verificationUrl(serviceNumber) {
+    const origin = window.location.origin || '';
+    return `${origin}/verify-id.html?sn=${encodeURIComponent(serviceNumber || '')}`;
+}
+
 function value(personnel, ...keys) {
     for (const key of keys) {
         const next = personnel?.[key];
@@ -82,11 +87,50 @@ function imageUrl(input) {
     return cleanUrl && cleanUrl !== 'N/A' ? cleanUrl : '';
 }
 
-function profileImageMarkup(src, className, alt) {
-    const cleanSrc = imageUrl(src);
-    if (!cleanSrc) return '';
+function uppercaseValue(input) {
+    return String(input || '').trim().toUpperCase();
+}
 
-    return `<img src="${escapeHtml(cleanSrc)}" class="${className}" alt="${escapeHtml(alt)}" crossorigin="anonymous" referrerpolicy="no-referrer">`;
+function commandName(input, suffixPattern) {
+    return uppercaseValue(input).replace(suffixPattern, '').trim() || 'N/A';
+}
+
+function extractDriveFileId(url) {
+    const cleanUrl = imageUrl(url);
+    if (!cleanUrl || !cleanUrl.includes('drive.google.com')) return '';
+
+    const fileId = cleanUrl.match(/[-\w]{25,}/);
+    return fileId?.[0] || '';
+}
+
+function imageCandidates(url) {
+    const cleanUrl = imageUrl(url);
+    if (!cleanUrl) return [];
+
+    const driveId = extractDriveFileId(cleanUrl);
+    if (driveId) {
+        return [
+            `https://drive.google.com/thumbnail?id=${driveId}&sz=w1000`,
+            `https://drive.google.com/uc?export=view&id=${driveId}`,
+            `https://lh3.googleusercontent.com/d/${driveId}=w1000`,
+            cleanUrl
+        ];
+    }
+
+    return [cleanUrl];
+}
+
+function escapeAttr(input) {
+    return escapeHtml(input).replace(/`/g, '&#96;');
+}
+
+function profileImageMarkup(src, className, alt) {
+    const candidates = imageCandidates(src);
+    if (!candidates.length) return '';
+
+    const encodedCandidates = escapeAttr(JSON.stringify(candidates));
+
+    return `<img src="${escapeHtml(candidates[0])}" class="${className}" alt="${escapeHtml(alt)}" data-image-candidates='${encodedCandidates}' data-image-index="0" referrerpolicy="no-referrer" onerror="const list=JSON.parse(this.dataset.imageCandidates||'[]'); const next=(Number(this.dataset.imageIndex)||0)+1; if(list[next]){ this.dataset.imageIndex=String(next); this.src=list[next]; }">`;
 }
 
 function downloadDataUrl(dataUrl, filename) {
@@ -110,14 +154,14 @@ function normalizePersonnel(personnel = {}) {
         surname,
         firstName,
         otherName,
-        fullName: value(personnel, 'fullName') || [surname, firstName, otherName].filter(Boolean).join(' '),
-        rank: value(personnel, 'rank', 'Rank') || 'Officer',
-        serviceNumber: value(personnel, 'serviceNumber', 'Service Number') || uniqueID || 'CADETI',
-        state: value(personnel, 'state', 'State Command', 'State') || 'N/A',
-        area: value(personnel, 'area', 'Area Command', 'Area') || 'N/A',
-        postHeld: value(personnel, 'postHeld', 'Post Held') || 'N/A',
-        passportUrl: imageUrl(value(personnel, 'passportUrl', 'Passport URL', 'photoUrl', 'photo', 'passport')),
-        signatureUrl: imageUrl(value(personnel, 'signatureUrl', 'Signature URL', 'signature')),
+        fullName: uppercaseValue(value(personnel, 'fullName') || [surname, firstName, otherName].filter(Boolean).join(' ')),
+        rank: uppercaseValue(value(personnel, 'rank', 'Rank') || 'Officer'),
+        serviceNumber: uppercaseValue(value(personnel, 'serviceNumber', 'Service Number') || uniqueID || 'CADETI'),
+        state: commandName(value(personnel, 'state', 'State Command', 'State'), /\s+(STATE|STATE COMMAND)$/),
+        area: commandName(value(personnel, 'area', 'Area Command', 'Area'), /\s+(AREA|AREA COMMAND)$/),
+        postHeld: uppercaseValue(value(personnel, 'postHeld', 'Post Held') || 'N/A'),
+        passportUrl: imageUrl(value(personnel, 'passportUrl', 'passportURL', 'Passport URL', 'Passport Url', 'PassportURL', 'Passport Photo', 'Passport Photo URL', 'Uploaded Passport', 'photoUrl', 'photoURL', 'Photo URL', 'photo', 'passport')),
+        signatureUrl: imageUrl(value(personnel, 'signatureUrl', 'signatureURL', 'Signature URL', 'Signature Url', 'SignatureURL', 'Uploaded Signature', 'Holder Signature URL', 'holderSignatureUrl', 'signature')),
         authoritySignatureUrl: imageUrl(value(personnel, 'authoritySignatureUrl', 'authorisedSignatureUrl', 'authorizedSignatureUrl'))
     };
 }
@@ -171,8 +215,8 @@ export async function generateIDCard(personnel) {
                             <div class="field"><span class="lbl">FULL NAME:</span> <span class="val">${escapeHtml(data.fullName)}</span></div>
                             <div class="field"><span class="lbl">RANK:</span> <span class="val">${escapeHtml(data.rank)}</span></div>
                             <div class="field"><span class="lbl">SERVICE NO:</span> <span class="val">${escapeHtml(data.serviceNumber)}</span></div>
-                            <div class="field"><span class="lbl">STATE COMMAND:</span> <span class="val">${escapeHtml(data.state)} STATE</span></div>
-                            <div class="field"><span class="lbl">AREA COMMAND:</span> <span class="val">${escapeHtml(data.area)} AREA COMMAND</span></div>
+                            <div class="field"><span class="lbl">STATE COMMAND:</span> <span class="val">${escapeHtml(data.state)}</span></div>
+                            <div class="field"><span class="lbl">AREA COMMAND:</span> <span class="val">${escapeHtml(data.area)}</span></div>
                             <div class="field"><span class="lbl">POST:</span> <span class="val">${escapeHtml(data.postHeld)}</span></div>
                         </div>
 
@@ -192,9 +236,10 @@ export async function generateIDCard(personnel) {
 
                 <div class="id-card-wrap" id="backSide">
                     <div class="id-back-bg">
+                        <img src="${LOGO_IMAGE}" class="back-watermark" alt="">
                         <div class="back-header">
                             <img src="${LOGO_IMAGE}" class="back-logo" alt="CADETI logo">
-                            <h2>C.A.D.E.T.I</h2>
+                            <h2>C.A.D.E.T.I.</h2>
                         </div>
                         <div class="back-content">
                             <h4 class="property-text">PROPERTY OF THE COMMUNITY AMBASSADOR FOR DEVELOPMENTAL ENGAGEMENT TECHNIQUES INITIATIVES.</h4>
@@ -202,7 +247,7 @@ export async function generateIDCard(personnel) {
                             <p class="legal-text">The Bearer is authorised to maintain peace, support lawful community safety operations and represent the organisation within approved duties.</p>
                             <p class="legal-text">If lost and found, please return to the nearest police station or CADETI office around you.</p>
                             
-                            <div class="expiry-row">Expire: ____________________</div>
+                            <div class="expiry-row">Expire: 2030</div>
 
                             <div class="auth-sign-block">
                                 <div class="auth-signature-slot${data.authoritySignatureUrl ? '' : ' is-empty'}">
@@ -242,14 +287,14 @@ export async function generateIDCard(personnel) {
         await ensureIdCardFormatLibraries();
 
         const qrImage = modal.querySelector('.qr-code');
-        if (qrImage) qrImage.src = await makeQrDataUrl(data.uniqueID);
+        if (qrImage) qrImage.src = await makeQrDataUrl(verificationUrl(data.serviceNumber));
 
         window.JsBarcode(`#${barcodeId}`, data.uniqueID, {
             format: "CODE128",
             width: 1.5,
-            height: 40,
+            height: 31,
             displayValue: true,
-            fontSize: 10,
+            fontSize: 8,
             lineColor: "#064d19"
         });
 

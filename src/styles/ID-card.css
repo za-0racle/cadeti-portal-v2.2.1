@@ -56,6 +56,18 @@
     overflow: hidden;
     flex-shrink: 0;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    animation: idCardFloatIn 420ms ease both;
+    transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.id-card-wrap:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 32px rgba(0, 44, 16, 0.22);
+}
+
+.id-card-wrap,
+.id-card-wrap * {
+    box-sizing: border-box;
 }
 
 /* Front Side Specifics */
@@ -64,7 +76,7 @@
     border: 8px solid #078f3b;
     border-top-width: 5px;
     border-bottom-width: 5px;
-    padding: 12px 14px 10px;
+    padding: 9px 14px 8px;
     display: flex;
     flex-direction: column;
     background: linear-gradient(#e0271e 0 5px, transparent 5px calc(100% - 5px), #e0271e calc(100% - 5px)),
@@ -74,10 +86,10 @@
 
 .id-watermark {
     position: absolute;
-    width: 355px;
-    height: 355px;
+    width: 338px;
+    height: 338px;
     object-fit: contain;
-    top: 74px;
+    top: 84px;
     left: 50%;
     transform: translateX(-50%);
     opacity: 0.045;
@@ -94,20 +106,21 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 16px;
-    margin-top: 6px;
+    gap: 14px;
+    margin-top: 2px;
 }
 
 .logo-main {
-    width: 44px;
-    height: 44px;
+    width: 58px;
+    height: 58px;
     object-fit: contain;
     border-radius: 999px;
+    transform: scale(1.16);
 }
 
 .coat-arms {
-    width: 48px;
-    height: 48px;
+    width: 46px;
+    height: 46px;
     object-fit: contain;
 }
 
@@ -115,26 +128,26 @@
     color: #078f3b;
     text-shadow: 0 1px 1px rgba(0,0,0,0.18);
     font-family: 'Montserrat', sans-serif;
-    font-size: 9px;
+    font-size: 9.4px;
     font-weight: 800;
-    line-height: 1.16;
-    margin: 8px 0 3px;
+    line-height: 1.12;
+    margin: 5px 0 2px;
 }
 
-.org-acronym {
-    color: #d62319;
+.id-header .org-acronym {
+    color: #e0271e;
     text-shadow: 0 1px 1px rgba(0,0,0,0.15);
     font-family: 'Montserrat', sans-serif;
-    font-size: 13px;
+    font-size: 13.5px;
     font-weight: 800;
     letter-spacing: 3px;
-    margin: 0 0 4px;
+    margin: 0 0 2px;
 }
 
 .id-header .motto {
     color: #111;
     font-family: Georgia, 'Times New Roman', serif;
-    font-size: 7.5px;
+    font-size: 7px;
     font-style: italic;
     font-weight: 700;
     margin: 0;
@@ -144,12 +157,12 @@
     background: #078f3b;
     color: white;
     font-family: 'Montserrat', sans-serif;
-    font-size: 12px;
+    font-size: 9.8px;
     font-weight: 800;
-    padding: 5px;
+    padding: 4px 4px;
     text-align: center;
-    margin: 8px 14px 10px;
-    letter-spacing: 5px;
+    margin: 6px 38px 8px;
+    letter-spacing: 3.8px;
     position: relative;
     z-index: 1;
 }
@@ -160,12 +173,17 @@
 }
 
 .photo-box {
-    width: 110px;
-    height: 146px;
-    border: 1px solid #c4c4c4;
-    margin: 0 auto 10px;
+    width: 104px;
+    height: 104px;
+    border: 3px solid #ffffff;
+    border-radius: 999px;
+    margin: 0 auto 8px;
     overflow: hidden;
     background: #f5f5f5;
+    box-shadow: 0 9px 22px rgba(0, 68, 24, 0.2), 0 0 0 1px rgba(7, 143, 59, 0.22);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .photo-box.is-empty {
@@ -174,9 +192,11 @@
 }
 
 .passport-photo {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+    width: 88%;
+    height: 88%;
+    object-fit: contain;
+    object-position: center top;
+    border-radius: 999px;
     display: block;
 }
 
@@ -184,18 +204,19 @@
     padding: 0 4px 0 0;
     position: relative;
     z-index: 1;
+    margin-bottom: 58px;
 }
 
 .id-details .field {
     display: grid;
-    grid-template-columns: 98px minmax(0, 1fr);
-    gap: 8px;
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 6px;
     align-items: start;
-    min-height: 19px;
-    margin-bottom: 5px;
+    min-height: 15px;
+    margin-bottom: 3px;
     font-family: 'Montserrat', sans-serif;
-    font-size: 10.5px;
-    line-height: 1.18;
+    font-size: 9.8px;
+    line-height: 1.1;
 }
 
 .id-details .lbl {
@@ -208,14 +229,16 @@
     color: #078f3b;
     font-weight: 800;
     overflow-wrap: anywhere;
+    hyphens: auto;
+    text-transform: uppercase;
 }
 
 .qr-area {
     position: absolute;
-    right: 13px;
-    bottom: 48px;
-    width: 42px;
-    height: 42px;
+    right: 14px;
+    bottom: 57px;
+    width: 40px;
+    height: 40px;
     z-index: 2;
 }
 
@@ -228,27 +251,27 @@
 
 .signature-area {
     position: absolute;
-    bottom: 12px;
-    left: 46px;
-    right: 46px;
+    bottom: 10px;
+    left: 48px;
+    right: 48px;
     text-align: center;
     z-index: 2;
 }
 
 .holder-signature-slot {
-    height: 28px;
+    height: 22px;
     display: flex;
     align-items: flex-end;
     justify-content: center;
 }
 
 .holder-signature-slot.is-empty {
-    height: 22px;
+    height: 17px;
 }
 
 .holder-sign {
     max-width: 100%;
-    max-height: 28px;
+    max-height: 22px;
     object-fit: contain;
     mix-blend-mode: multiply;
 }
@@ -261,7 +284,7 @@
 .signature-area label {
     color: #078f3b;
     font-family: 'Montserrat', sans-serif;
-    font-size: 8.5px;
+    font-size: 8px;
     font-weight: 800;
 }
 
@@ -269,91 +292,119 @@
 .id-back-bg {
     height: 100%;
     border: 9px solid #078f3b;
-    padding: 28px 25px 18px;
+    padding: 28px 25px 14px;
     text-align: center;
     position: relative;
     background: #ffffff;
+    display: flex;
+    flex-direction: column;
+}
+
+.back-watermark {
+    position: absolute;
+    width: 310px;
+    height: 310px;
+    object-fit: contain;
+    top: 111px;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0.035;
+    pointer-events: none;
+    z-index: 0;
 }
 
 .back-header {
-    height: 43px;
+    height: 44px;
     background: #078f3b;
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    gap: 10px;
-    padding: 0 14px 0 8px;
-    margin: 4px auto 24px;
-    width: 92%;
+    gap: 4px;
+    padding: 0 10px 0 0;
+    margin: 4px auto 19px;
+    width: 100%;
+    overflow: visible;
+    position: relative;
+    z-index: 1;
 }
 
 .back-logo {
-    width: 39px;
-    height: 39px;
+    width: 50px;
+    height: 50px;
     object-fit: contain;
     border-radius: 999px;
     background: #fff;
+    flex: 0 0 auto;
+    transform: translateX(-20px);
+    margin-right: -15px;
+    box-shadow: 0 0 0 1px rgba(7, 143, 59, 0.18);
 }
 
 .back-header h2 {
     margin: 0;
     color: #fff;
     font-family: 'Montserrat', sans-serif;
-    font-size: 25px;
+    font-size: 23px;
     font-weight: 800;
-    letter-spacing: 7px;
+    letter-spacing: 4.4px;
+    line-height: 1;
+    white-space: nowrap;
 }
 
 .back-content {
     position: relative;
     z-index: 1;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 .property-text {
     color: #d62319;
     font-family: 'Montserrat', sans-serif;
-    font-size: 13.5px;
-    line-height: 1.35;
-    margin: 0 0 24px;
+    font-size: 12.6px;
+    line-height: 1.4;
+    margin: 0 0 17px;
     text-align: left;
 }
 
 .legal-text {
     color: #111;
     font-family: Georgia, 'Times New Roman', serif;
-    font-size: 11px;
+    font-size: 9.8px;
     font-weight: 700;
-    line-height: 1.36;
-    margin: 0 0 22px;
+    line-height: 1.46;
+    margin: 0 0 13px;
     text-align: left;
 }
 
 .expiry-row {
     font-family: Georgia, 'Times New Roman', serif;
-    font-size: 12px;
+    font-size: 11.5px;
     font-weight: 800;
-    margin: 4px 0 14px;
+    margin: auto 0 8px;
 }
 
 .auth-sign-block {
-    margin: 0 auto 10px;
+    margin: 0 auto 5px;
     width: 76%;
 }
 
 .auth-signature-slot {
-    height: 45px;
+    height: 31px;
     display: flex;
     align-items: flex-end;
     justify-content: center;
 }
 
 .auth-signature-slot.is-empty {
-    height: 34px;
+    height: 19px;
 }
 
 .auth-sign-img {
     max-width: 100%;
-    max-height: 45px;
+    max-height: 31px;
     object-fit: contain;
     mix-blend-mode: multiply;
 }
@@ -371,15 +422,28 @@
 }
 
 .barcode-area {
-    position: absolute;
-    bottom: 18px;
-    left: 40px;
-    right: 40px;
+    position: static;
+    width: 78%;
+    height: 42px;
+    margin: auto auto 0;
+    flex: 0 0 auto;
 }
 
 .barcode-area svg {
     width: 100%;
-    height: 46px;
+    height: 42px;
+    display: block;
+}
+
+@keyframes idCardFloatIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.985);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 @media (max-width: 480px) {
@@ -395,5 +459,9 @@
         transform: scale(0.88);
         transform-origin: top center;
         margin-bottom: -60px;
+    }
+
+    .id-card-wrap:hover {
+        transform: scale(0.88);
     }
 }
